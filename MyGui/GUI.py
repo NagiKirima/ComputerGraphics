@@ -1,73 +1,73 @@
-import enum
 from tkinter import *
+from gui_settings import *
 from tkinter.colorchooser import askcolor
 from GeometryPrimitives import *
 import math
-import time
+import enum
+from numba import njit
 
 
 class Engine(object):
     class TransitMode(enum.Enum):
-        p1 = 0
-        p2 = 1
-        full = 2
+        point1 = 0
+        point2 = 1
+        parallel = 2
         nothing = -1
 
+    class WorkingMode(enum.Enum):
+        add_mode = 0
+        edit_mode = 1
+        nothing = -1
+
+    # fields initialization
     def __init__(self):
-        self.button_font = "Arial 15"
-        self.status_bar_font = "Arial 12"
-        self.canvas_font = "Arial 10"
-        self.window_w = 1000
-        self.window_h = 1000
-        self.bg_field = "#a6a6a6"
         self.line_color = "#000000"
         self.line_width = 1
 
         # mode flags
-        self.edit = False
-        self.add = False
+        self.work_mode = self.WorkingMode.nothing
         self.transit = self.TransitMode.nothing
 
         # objects
-        self.transit_line_deltas = [0, 0]
+        self.transit_line_deltas = None
         self.current_mouse = None
         self.prev_mouse = None
         self.line_points = [None, None]
         self.lines = []
-        self.pen_primitive = []
-        self.current_line = Line()
+        self.current_line = None
 
         # init tk window
-        self.root = Tk()
-        self.root.geometry("{}x{}".format(self.window_w, self.window_h))
-        self.root.title("Gui")
-        self.root.resizable(0, 0)
+        self.root = WINDOW
 
         # init canvas field
-        self.canv = Canvas(self.root, bg=self.bg_field)
+        self.canvas = CANVAS
 
         # buttons init
-        self.color_button = Button(text="Цвет", font=self.button_font,
+        self.color_button = Button(text="Цвет", font=BUTTON_FONT,
                                    command=self._set_color)
-        self.edit_button = Button(text="Изменить", font=self.button_font,
+        self.edit_button = Button(text="Изменить", font=BUTTON_FONT,
                                   command=self._set_edit)
-        self.add_button = Button(text="Добавить", font=self.button_font,
+        self.add_button = Button(text="Добавить", font=BUTTON_FONT,
                                  command=self._set_add)
 
         # init slider
-        self.width_slider = Scale(self.root, orient=HORIZONTAL, from_=1, to=10, resolution=1)
+        self.width_slider = WIDTH_SCALE
 
-        # init status bar
-        self.status_bar = Label(text="", font=self.status_bar_font, anchor=W)
+        # init labels
+        self.status_bar = STATUS_BAR
+        self.width_label = WIDTH_LABEL
 
         # binds
-        self.canv.bind("<B1-Motion>", self._canvas_b1_motion)
-        self.canv.bind("<ButtonRelease-1>", self._canvas_b1_release)
+        self.canvas.bind("<B1-Motion>", self._canvas_b1_motion)
+        self.canvas.bind("<ButtonRelease-1>", self._canvas_b1_release)
         self.width_slider.bind("<B1-Motion>", self._set_width)
+        self.canvas.bind("<Motion>", self._update_status_bar)
+        self.canvas.bind("<1>", self._canvas_left_button_click)
+        self.canvas.bind("<2>", self._canvas_delete_button_hotkey)
 
         # grid
-        self.canv.grid(row=2, column=0, columnspan=7, rowspan=3, padx=5, pady=5, sticky=NSEW)
-        self.width_slider.grid(row=2, column=7, columnspan=1, padx=5, pady=5, sticky=NSEW)
+        self.canvas.grid(row=2, column=0, columnspan=7, rowspan=3, padx=5, pady=5, sticky=NSEW)
+        self.width_slider.grid(row=2, column=9, padx=5, pady=5, sticky=NSEW)
         self.color_button.grid(row=3, column=7, padx=5, pady=5)
         self.edit_button.grid(row=0, column=2, padx=5, pady=5)
         self.add_button.grid(row=0, column=1, padx=5, pady=5)
@@ -76,38 +76,87 @@ class Engine(object):
         self.root.columnconfigure(0, weight=1)
         self.root.columnconfigure(6, weight=1)
 
+    # update status bar
+    def _update_status_bar(self, event):
+        self._fill_status_bar(event.x, event.y)
+
+    def _fill_status_bar(self, x, y):
+        match self.work_mode:
+            case self.WorkingMode.add_mode:
+                self.status_bar.config(
+                    text="x:{}, y:{}, current line: {}, color: {}, width: {}".format(
+                        x, y, self.current_line, self.line_color, self.line_width
+                    )
+                )
+            case self.WorkingMode.edit_mode:
+                if self.current_line is not None:
+                    self.status_bar.config(
+                        text="x:{}, y:{}, current line: {}, color: {}, width: {}".format(
+                            x, y, self.current_line, self.current_line.color, self.current_line.width
+                        )
+                    )
+                else:
+                    self.status_bar.config(
+                        text="x:{}, y:{}, current line: {}, color: {}, width: {}".format(
+                            x, y, self.current_line, None, None
+                        )
+                    )
+
+    # handler delete button
+    #@njit(fastmath=True, parallel=True)
+    def _canvas_delete_button_hotkey(self, event):
+        for i in range(len(self.lines)):
+            pass
+
+    # handler left mouse click
+    def _canvas_left_button_click(self, event):
+        mouse_x, mouse_y = self._check_coords(event.x, event.y)
+        eps = 10
+        for i in self.lines:
+            if isinstance(i, Line):
+                center_x = (i.p1.x + i.p2.x) / 2
+                center_y = (i.p1.y + i.p2.y) / 2
+                if math.fabs(center_x - mouse_x) <= eps and math.fabs(center_y - mouse_y) <= eps:
+                    self.current_line = i
+                    break
+        self._fill_status_bar(mouse_x, mouse_y)
+
     # handler left mouse button release
     def _canvas_b1_release(self, event):
         self.prev_mouse = None
         self.current_mouse = None
         self.line_points = [None, None]
-        if self.add:
-            self.lines.append(self.current_line)
-        if self.edit:
-            self.transit = self.TransitMode.nothing
-            self.current_line = Line()
+        self.transit_line_deltas = None
+        match self.work_mode:
+            case self.WorkingMode.add_mode:
+                self.lines.append(self.current_line)
+            case self.WorkingMode.edit_mode:
+                self.transit = self.TransitMode.nothing
 
     # handler left mouse button and motion
     def _canvas_b1_motion(self, event):
-        self.current_mouse = Point(event.x, event.y)
-        self._check_coords()
+        coords = self._check_coords(event.x, event.y)
+        self.current_mouse = Point(coords[0], coords[1])
         self._redraw_scene()
-        if self.add:
-            self._add_line()
-        elif self.edit:
-            self._transit_line()
+        match self.work_mode:
+            case self.WorkingMode.add_mode:
+                self._add_line()
+            case self.WorkingMode.edit_mode:
+                self._transit_line()
         self.prev_mouse = Point(self.current_mouse.x, self.current_mouse.y)
+        self._fill_status_bar(self.current_mouse.x, self.current_mouse.y)
 
-    def _check_coords(self):
-        # checking mouse coord
-        if self.current_mouse.x < 0:
-            self.current_mouse.x = 0
-        elif self.current_mouse.x > self.canv.winfo_width():
-            self.current_mouse.x = self.canv.winfo_width()
-        if self.current_mouse.y < 0:
-            self.current_mouse.y = 0
-        elif self.current_mouse.y > self.canv.winfo_height():
-            self.current_mouse.y = self.canv.winfo_height()
+    # checking coords
+    def _check_coords(self, x, y):
+        if x < 0:
+            x = 0
+        elif x > self.canvas.winfo_width():
+            x = self.canvas.winfo_width()
+        if y < 0:
+            y = 0
+        elif y > self.canvas.winfo_height():
+            y = self.canvas.winfo_height()
+        return [x, y]
 
     # transit line
     def _transit_line(self):
@@ -119,23 +168,41 @@ class Engine(object):
                         # match with p1
                         if math.fabs(i.p1.x - self.prev_mouse.x) <= eps \
                                 and math.fabs(i.p1.y - self.prev_mouse.y) <= eps:
-                            self.transit = self.TransitMode.p1
+                            self.transit = self.TransitMode.point1
                             self.current_line = i
                             break
                         # match with p2
-                        if math.fabs(i.p2.x - self.prev_mouse.x) <= eps \
+                        elif math.fabs(i.p2.x - self.prev_mouse.x) <= eps \
                                 and math.fabs(i.p2.y - self.prev_mouse.y) <= eps:
-                            self.transit = self.TransitMode.p2
+                            self.transit = self.TransitMode.point2
                             self.current_line = i
                             break
                         # match with point between p1, p2
+                        else:
+                            if math.fabs(self.prev_mouse.x * i.get_a() + self.prev_mouse.y * i.get_b() + i.get_c()) <= eps**3:
+                                self.transit_line_deltas = [
+                                    # deltas for p1
+                                    i.p1.x - self.prev_mouse.x,
+                                    i.p1.y - self.prev_mouse.y,
+                                    # deltas for p2
+                                    self.prev_mouse.x - i.p2.x,
+                                    self.prev_mouse.y - i.p2.y
+                                ]
+                                self.current_line = i
+                                self.transit = self.TransitMode.parallel
+                                break
 
             # check flags
             match self.transit:
-                case self.TransitMode.p1:
+                case self.TransitMode.point1:
                     self.current_line.p1 = self.current_mouse
-                case self.TransitMode.p2:
+                case self.TransitMode.point2:
                     self.current_line.p2 = self.current_mouse
+                case self.TransitMode.parallel:
+                    self.current_line.p1.x = self.current_mouse.x + self.transit_line_deltas[0]
+                    self.current_line.p2.x = self.current_mouse.x - self.transit_line_deltas[2]
+                    self.current_line.p1.y = self.current_mouse.y + self.transit_line_deltas[1]
+                    self.current_line.p2.y = self.current_mouse.y - self.transit_line_deltas[3]
 
     # adding line
     def _add_line(self):
@@ -156,7 +223,7 @@ class Engine(object):
     # draw primitive line
     def _draw_line(self, line):
         if isinstance(line, Line):
-            self.canv.create_line(
+            self.canvas.create_line(
                 line.p1.x,
                 line.p1.y,
                 line.p2.x,
@@ -164,20 +231,50 @@ class Engine(object):
                 width=line.width,
                 fill=line.color
             )
-            options = {
-                "font": self.canvas_font,
-                "text": "x: {}, y: {}".format(line.p1.x, line.p1.y),
-                "anchor": "w"}
-            self.canv.create_text(line.p1.x, line.p1.y, options)
-            options = {
-                "font": self.canvas_font,
-                "text": "x: {}, y: {}".format(line.p2.x, line.p2.y),
-                "anchor": "w"}
-            self.canv.create_text(line.p2.x, line.p2.y, options)
+            self.canvas.create_oval(
+                int((line.p1.x + line.p2.x) / 2) - line.width,
+                int((line.p1.y + line.p2.y) / 2) - line.width,
+                int((line.p1.x + line.p2.x) / 2) + line.width,
+                int((line.p1.y + line.p2.y) / 2) + line.width,
+                fill=line.color,
+                outline="white"
+            )
+            anchor_p1 = self._get_line_text_anchor(line.p1)
+            anchor_p2 = self._get_line_text_anchor(line.p2)
+            options1 = self._get_line_text_options(line.p1, anchor_p1)
+            options2 = self._get_line_text_options(line.p2, anchor_p2)
+            self.canvas.create_text(line.p1.x, line.p1.y, options1)
+            self.canvas.create_text(line.p2.x, line.p2.y, options2)
+
+    def _get_line_text_options(self, point, anchor):
+        return {
+            "font": CANVAS_TEXT_FONT,
+            "text": "x: {}, y: {}".format(point.x, point.y),
+            "anchor": anchor
+        }
+
+    def _get_line_text_anchor(self, point):
+        if isinstance(point, Point):
+            part1 = ""
+            part2 = ""
+            delta = 100
+            if point.y <= delta:
+                part1 = "n"
+            elif point.y >= self.canvas.winfo_height() - delta:
+                part1 = "s"
+
+            if point.x <= delta:
+                part2 = "w"
+            elif point.x >= self.canvas.winfo_width() - delta:
+                part2 = "e"
+            else:
+                part2 = "w"
+            return part1 + part2
+        return "center"
 
     # redraw scene
     def _redraw_scene(self):
-        self.canv.delete("all")
+        self.canvas.delete("all")
         # redraw old-lines
         for i in self.lines:
             if isinstance(i, Line):
@@ -192,31 +289,32 @@ class Engine(object):
         color = askcolor()[1]
         if color is not None:
             self.line_color = color
+            if self.work_mode == self.WorkingMode.edit_mode:
+                self.current_line.color = color
+                self._redraw_scene()
 
     # set width
     def _set_width(self, event):
         self.line_width = self.width_slider.get()
+        if self.work_mode == self.WorkingMode.edit_mode:
+            self.current_line.width = self.width_slider.get()
+            self._redraw_scene()
 
     # set edit mode
     def _set_edit(self):
-        self.canv.config(cursor="fleur")
+        self.canvas.config(cursor="fleur")
         self.edit_button.config(relief=SUNKEN)
         self.add_button.config(relief=RAISED)
         self.line_points = [None, None]
-        self.current_line = Line()
-        self.edit = True
-        self.add = False
+        self.current_line = None
+        self.work_mode = self.WorkingMode.edit_mode
 
     # set add mode
     def _set_add(self):
-        self.canv.config(cursor="pencil")
+        self.canvas.config(cursor="pencil")
         self.edit_button.config(relief=RAISED)
         self.add_button.config(relief=SUNKEN)
         self.line_points = [None, None]
-        self.current_line = Line()
-        self.edit = False
-        self.add = True
+        self.current_line = None
+        self.work_mode = self.WorkingMode.add_mode
 
-
-w = Engine()
-w.start()

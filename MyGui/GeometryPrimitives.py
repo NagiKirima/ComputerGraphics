@@ -22,7 +22,7 @@ class Line:
     def __init__(self, p1=None, p2=None, color=None, width=None):
         self.p1 = Point()
         self.p2 = Point()
-        self.color = "black"
+        self.color = "#000000"
         self.width = 1
         if p1 is not None:
             if isinstance(p1, Point):
