@@ -103,7 +103,6 @@ class Engine(object):
                     )
 
     # handler delete button
-    #@njit(fastmath=True, parallel=True)
     def _canvas_delete_button_hotkey(self, event):
         for i in range(len(self.lines)):
             pass
