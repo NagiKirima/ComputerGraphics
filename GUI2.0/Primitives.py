@@ -43,21 +43,8 @@ class Line:
             if isinstance(width, int):
                 self.width = width
 
-    def get_a(self):
-        return int(self.p1.y - self.p2.y)
-
-    def get_b(self):
-        return int(self.p2.x - self.p1.x)
-
-    def get_c(self):
-        return int(self.p1.x * self.p2.y - self.p2.x * self.p1.y)
-
-    def is_consist(self, point):
-        if isinstance(point, Point):
-            return True \
-                if point.x * self.get_a() + point.y * self.get_b() + self.get_c() == 0 \
-                else False
+    def get_directive_vector(self):
+        return f"({self.p2.x - self.p1.x}, {self.p2.y - self.p1.y}, {self.p2.z - self.p1.z})"
 
     def __str__(self):
-        return "({}, {}, {})".format(
-            self.get_a(), self.get_b(), self.get_c())
+        return self.get_directive_vector()
