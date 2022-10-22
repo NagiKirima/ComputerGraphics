@@ -2,7 +2,7 @@ from tkinter import *
 
 # constant
 WINDOW_H = 1000
-WINDOW_W = 1000
+WINDOW_W = 1920
 BUTTON_FONT = "Arial 15"
 LABEL_FONT = "Arial 12"
 CANVAS_TEXT_FONT = "Arial 10"
@@ -18,16 +18,22 @@ WINDOW.title("Gui")
 WINDOW.resizable(0, 0)
 
 # canvas initialization
-CANVAS = Canvas(WINDOW, bg=CANVAS_BG_COLOR, cursor=CANVAS_ADD_CURSOR, scrollregion=(0, 0, 10000, 10000))
+MAXY = 10000
+MAXX = 10000
+MINX = -10000
+MINY = -10000
+CANVAS = Canvas(WINDOW, bg=CANVAS_BG_COLOR, cursor=CANVAS_ADD_CURSOR, scrollregion=(MINX, MINY, MAXX, MAXY))
 
 # scrollbars for canvas
-hbar = Scrollbar(CANVAS, orient=HORIZONTAL, cursor=CANVAS_SCROLL_CURSOR)
-hbar.pack(side=BOTTOM, fill=X)
-hbar.config(command=CANVAS.xview)
-vbar = Scrollbar(CANVAS, orient=VERTICAL, cursor=CANVAS_SCROLL_CURSOR)
-vbar.pack(side=RIGHT, fill=Y)
-vbar.config(command=CANVAS.yview)
-CANVAS.config(xscrollcommand=hbar.set, yscrollcommand=vbar.set)
+XBAR = Scrollbar(CANVAS, orient=HORIZONTAL, cursor=CANVAS_SCROLL_CURSOR)
+XBAR.pack(side=BOTTOM, fill=X)
+XBAR.config(command=CANVAS.xview)
+
+YBAR = Scrollbar(CANVAS, orient=VERTICAL, cursor=CANVAS_SCROLL_CURSOR)
+YBAR.pack(side=RIGHT, fill=Y)
+YBAR.config(command=CANVAS.yview)
+
+CANVAS.config(xscrollcommand=XBAR.set, yscrollcommand=YBAR.set)
 CANVAS.pack(side=LEFT, expand=True, fill=BOTH)
 
 # slider initialization

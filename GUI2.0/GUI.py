@@ -9,6 +9,8 @@ from numba import njit
 
 
 class Engine(object):
+    # enums
+    ###############################################################
     class ProjectionMode(enum.Enum):
         xy = 0,
         zy = 1,
@@ -36,6 +38,7 @@ class Engine(object):
         self.projection_mode = self.ProjectionMode.xy
 
         # objects
+        self.current_zero_coord = [0, 0]
         self.transit_line_deltas = None
         self.current_mouse = None
         self.prev_mouse = None
@@ -48,6 +51,8 @@ class Engine(object):
 
         # init canvas field
         self.canvas = CANVAS
+        self.y_bar = YBAR
+        self.x_bar = XBAR
 
         # buttons init
         self.color_button = Button(text="Цвет", font=BUTTON_FONT,
@@ -76,6 +81,8 @@ class Engine(object):
         self.width_slider.bind("<B1-Motion>", self._set_width)
         self.canvas.bind("<Motion>", self._update_status_bar)
         self.canvas.bind("<1>", self._canvas_left_button_click)
+        self.x_bar.bind("<B1-Motion>", self._update_zero_x_coord)
+        self.y_bar.bind("<B1-Motion>", self._update_zero_y_coord)
         # self.canvas.bind("<3>", self._canvas_delete_button_hotkey)
 
         # grid
@@ -96,6 +103,16 @@ class Engine(object):
 
     # handlers
     ###############################################################
+    # transit zero coord by x-scrollbar
+    def _update_zero_x_coord(self, event):
+        self.current_zero_coord[0] = int(self.x_bar.get()[0] * 2 * MAXX + MINX)
+        # print(self.current_zero_coord)
+
+    # transit zero coord by y_scrollbar
+    def _update_zero_y_coord(self, event):
+        self.current_zero_coord[1] = int(self.y_bar.get()[0] * 2 * MAXY + MINY)
+        # print(self.current_zero_coord)
+
     # set color
     def _set_color(self):
         color = askcolor()[1]
@@ -154,7 +171,7 @@ class Engine(object):
 
     # update status bar
     def _update_status_bar(self, event):
-        self._fill_status_bar(event.x, event.y)
+        self._fill_status_bar(self.current_zero_coord[0] + event.x, self.current_zero_coord[1] + event.y)
 
     # fill status bar label
     def _fill_status_bar(self, x, y):
@@ -200,8 +217,7 @@ class Engine(object):
 
     # left button click and motion (draw line or transit)
     def _canvas_b1_motion(self, event):
-        # self.current_mouse = self._check_mouse_coord(event.x, event.y)
-        self.current_mouse = [event.x, event.y]
+        self.current_mouse = self._check_mouse_coord(self.current_zero_coord[0] + event.x, self.current_zero_coord[1] + event.y)
         self._redraw_scene()
         match self.work_mode:
             case self.WorkingMode.add_mode:
@@ -227,8 +243,7 @@ class Engine(object):
     # left button click (chose line)
     def _canvas_left_button_click(self, event):
         if self.work_mode == self.WorkingMode.edit_mode:
-            # mouse = self._check_mouse_coord(event.x, event.y)
-            mouse = [event.x, event.y]
+            mouse = self._check_mouse_coord(self.current_zero_coord[0] + event.x, self.current_zero_coord[1] + event.y)
             for i in range(len(self.lines)):
                 if self._is_cursor_on_line(mouse[0], mouse[1], self.lines[i]):
                     self.current_line = self.lines[i]
@@ -239,14 +254,14 @@ class Engine(object):
     ###############################################################
     # check mouse pos
     def _check_mouse_coord(self, x, y):
-        if x < 0:
-            x = 0
-        elif x > self.canvas.winfo_width():
-            x = self.canvas.winfo_width()
-        if y < 0:
-            y = 0
-        elif y > self.canvas.winfo_height():
-            y = self.canvas.winfo_height()
+        if x < -MAXX:
+            x = -MAXX
+        elif x > MAXX:
+            x = MAXX
+        if y < -MAXY:
+            y = -MAXY
+        elif y > MAXY:
+            y = MAXY
         return [x, y]
 
     # convert canvas mouse coord to point coord with projection
@@ -270,13 +285,15 @@ class Engine(object):
 
     # check cursor pos on line
     def _is_cursor_on_line(self, m_x, m_y, line):
+        # point projection to canvas coords
         p1 = self._get_canvas_coord_from_projection_point(line.p1)
         p2 = self._get_canvas_coord_from_projection_point(line.p2)
         # canonical equation of line in the plane: Ax + By + C = 0
+        eps = 10
         a = p2[1] - p1[1]
         b = p1[0] - p2[0]
         c = p2[0] * p1[1] - p1[0] * p2[1]
-        return math.fabs(m_x * a + m_y * b + c) <= 10 ** 3
+        return math.fabs(m_x * a + m_y * b + c) <= eps ** 3
 
     # add line
     def _add_line(self):
@@ -331,14 +348,14 @@ class Engine(object):
     def _get_line_text_anchor(self, point_coord):
         part1 = ""
         part2 = ""
-        delta = 100
-        if point_coord[1] <= delta:
+        delta = 300
+        if point_coord[1] <= delta + MINY:
             part1 = "n"
-        elif point_coord[1] >= self.canvas.winfo_height() - delta:
+        elif point_coord[1] >= MAXY - delta:
             part1 = "s"
-        if point_coord[0] <= delta:
+        if point_coord[0] <= delta - MAXX:
             part2 = "w"
-        elif point_coord[0] >= self.canvas.winfo_width() - delta:
+        elif point_coord[0] >= MAXX - delta:
             part2 = "e"
         else:
             part2 = "w"
@@ -405,21 +422,32 @@ class Engine(object):
                     self.current_line.p2.z = self.current_mouse[0]
                     self.current_line.p2.y = self.current_mouse[1]
             if self.transit == self.TransitMode.parallel:
-                if self.projection_mode == self.ProjectionMode.xy:
-                    self.current_line.p1.x = self.current_mouse[0] + self.transit_line_deltas[0]
-                    self.current_line.p2.x = self.current_mouse[0] - self.transit_line_deltas[2]
-                    self.current_line.p1.y = self.current_mouse[1] + self.transit_line_deltas[1]
-                    self.current_line.p2.y = self.current_mouse[1] - self.transit_line_deltas[3]
-                if self.projection_mode == self.ProjectionMode.xz:
-                    self.current_line.p1.x = self.current_mouse[0] + self.transit_line_deltas[0]
-                    self.current_line.p2.x = self.current_mouse[0] - self.transit_line_deltas[2]
-                    self.current_line.p1.z = self.current_mouse[1] + self.transit_line_deltas[1]
-                    self.current_line.p2.z = self.current_mouse[1] - self.transit_line_deltas[3]
-                if self.projection_mode == self.ProjectionMode.zy:
-                    self.current_line.p1.z = self.current_mouse[0] + self.transit_line_deltas[0]
-                    self.current_line.p2.z = self.current_mouse[0] - self.transit_line_deltas[2]
-                    self.current_line.p1.y = self.current_mouse[1] + self.transit_line_deltas[1]
-                    self.current_line.p2.y = self.current_mouse[1] - self.transit_line_deltas[3]
+                # check on bounds p1, p2
+                p1 = self._get_canvas_coord_from_projection_point(self.current_line.p1)
+                p2 = self._get_canvas_coord_from_projection_point(self.current_line.p2)
+                is_not_bound = self._check_point_coord(p1[0], p1[1]) and self._check_point_coord(p2[0], p2[1])
+                if is_not_bound:
+                    if self.projection_mode == self.ProjectionMode.xy:
+                        self.current_line.p1.x = self.current_mouse[0] + self.transit_line_deltas[0]
+                        self.current_line.p2.x = self.current_mouse[0] - self.transit_line_deltas[2]
+                        self.current_line.p1.y = self.current_mouse[1] + self.transit_line_deltas[1]
+                        self.current_line.p2.y = self.current_mouse[1] - self.transit_line_deltas[3]
+                    if self.projection_mode == self.ProjectionMode.xz:
+                        self.current_line.p1.x = self.current_mouse[0] + self.transit_line_deltas[0]
+                        self.current_line.p2.x = self.current_mouse[0] - self.transit_line_deltas[2]
+                        self.current_line.p1.z = self.current_mouse[1] + self.transit_line_deltas[1]
+                        self.current_line.p2.z = self.current_mouse[1] - self.transit_line_deltas[3]
+                    if self.projection_mode == self.ProjectionMode.zy:
+                        self.current_line.p1.z = self.current_mouse[0] + self.transit_line_deltas[0]
+                        self.current_line.p2.z = self.current_mouse[0] - self.transit_line_deltas[2]
+                        self.current_line.p1.y = self.current_mouse[1] + self.transit_line_deltas[1]
+                        self.current_line.p2.y = self.current_mouse[1] - self.transit_line_deltas[3]
+
+    # check line point pos
+    def _check_point_coord(self, x, y):
+        if x <= MINX or x >= MAXX or y <= MINY or y >= MAXY:
+            return False
+        return True
 
     # render methods
     ###############################################################
