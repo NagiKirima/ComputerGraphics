@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="68a98367-2001-4cf4-87b5-9d3b3cafe4e6" name="Changes" comment="">
+    <list default="true" id="68a98367-2001-4cf4-87b5-9d3b3cafe4e6" name="Changes" comment="fix transit line">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/GUI2.0/GUI.py" beforeDir="false" afterPath="$PROJECT_DIR$/GUI2.0/GUI.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/GUI2.0/Settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/GUI2.0/Settings.py" afterDir="false" />
@@ -67,6 +67,14 @@
       <option name="presentableId" value="Default" />
       <updated>1666382275496</updated>
     </task>
+    <task id="LOCAL-00001" summary="fix transit line">
+      <created>1669582942350</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1669582942350</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -79,5 +87,9 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="fix transit line" />
+    <option name="LAST_COMMIT_MESSAGE" value="fix transit line" />
   </component>
 </project>

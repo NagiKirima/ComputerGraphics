@@ -85,21 +85,23 @@ class Engine(object):
         self.y_bar.bind("<B1-Motion>", self._update_zero_y_coord)
         # self.canvas.bind("<3>", self._canvas_delete_button_hotkey)
 
-        # grid
-        self.canvas.grid(row=2, column=0, columnspan=7, rowspan=3, padx=5, pady=5, sticky=NSEW)
-        self.width_slider.grid(row=2, column=9, padx=5, pady=5, sticky=NSEW)
-        self.color_button.grid(row=3, column=7, padx=5, pady=5)
-        self.edit_button.grid(row=0, column=2, padx=5, pady=5)
-        self.add_button.grid(row=0, column=1, padx=5, pady=5)
-        self.status_bar.grid(row=9, column=0, columnspan=7, padx=5, pady=5, sticky=NSEW)
-        self.xy_button.grid(row=1, column=1, padx=5, pady=5)
-        self.zy_button.grid(row=1, column=2, padx=5, pady=5)
-        self.xz_button.grid(row=1, column=3, padx=5, pady=5)
+        # grid window objects
+        self.canvas.grid(row=0, column=0, columnspan=7, rowspan=7, padx=5, pady=5, sticky=NSEW)
+        self.add_button.grid(row=0, column=7, columnspan=3, padx=5, pady=5, sticky=NSEW)
+        self.edit_button.grid(row=0, column=10, columnspan=3, padx=5, pady=5, sticky=NSEW)
+        self.xy_button.grid(row=1, column=7, columnspan=2, padx=5, pady=5, sticky=NSEW)
+        self.zy_button.grid(row=1, column=9, columnspan=2, padx=5, pady=5, sticky=NSEW)
+        self.xz_button.grid(row=1, column=11, columnspan=2, padx=5, pady=5, sticky=NSEW)
+        self.width_label.grid(row=2, column=7, padx=5, pady=5, sticky=NSEW)
+        self.width_slider.grid(row=2, column=8, columnspan=5, padx=5, pady=5, sticky=NSEW)
+        self.color_button.grid(row=3, column=7, padx=5, pady=5, columnspan=6, sticky=NSEW)
+        self.status_bar.grid(row=7, column=0, columnspan=7, padx=5, pady=5, sticky=NSEW)
 
         # grid configure
-        self.root.rowconfigure(2, weight=1)
+        self.root.rowconfigure(6, weight=1)
+        for i in range(7, 13):
+            self.root.columnconfigure(i, minsize=50)
         self.root.columnconfigure(0, weight=1)
-        self.root.columnconfigure(6, weight=1)
 
     # handlers
     ###############################################################
@@ -118,6 +120,7 @@ class Engine(object):
         color = askcolor()[1]
         if color is not None:
             self.line_color = color
+            self.color_button.config(fg=f'{color}')
             if self.work_mode == self.WorkingMode.edit_mode:
                 self.current_line.color = color
                 self._redraw_scene()
