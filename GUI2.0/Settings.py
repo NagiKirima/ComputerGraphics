@@ -2,7 +2,7 @@ from tkinter import *
 
 # constant
 WINDOW_H = 1000
-WINDOW_W = 1920
+WINDOW_W = 1800
 BUTTON_FONT = "Arial 15"
 LABEL_FONT = "Arial 12"
 CANVAS_TEXT_FONT = "Arial 10"

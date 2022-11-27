@@ -5,7 +5,7 @@ from tkinter.colorchooser import askcolor
 from Primitives import *
 import math
 import enum
-from numba import njit
+# from numba import njit
 
 
 class Engine(object):
@@ -288,6 +288,10 @@ class Engine(object):
         # point projection to canvas coords
         p1 = self._get_canvas_coord_from_projection_point(line.p1)
         p2 = self._get_canvas_coord_from_projection_point(line.p2)
+        if m_x < min(p1[0], p2[0]) or m_x > max(p1[0], p2[0]):
+            return False
+        if m_y < min(p1[1], p2[1]) or m_y > max(p1[1], p2[1]):
+            return False
         # canonical equation of line in the plane: Ax + By + C = 0
         eps = 10
         a = p2[1] - p1[1]
