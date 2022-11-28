@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="68a98367-2001-4cf4-87b5-9d3b3cafe4e6" name="Changes" comment="fix transit line">
+    <list default="true" id="68a98367-2001-4cf4-87b5-9d3b3cafe4e6" name="Changes" comment="normal grid for main form">
+      <change afterPath="$PROJECT_DIR$/GUI2.0/AddLineForm.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/GUI2.0/EditLineForm.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/GUI2.0/GUI.py" beforeDir="false" afterPath="$PROJECT_DIR$/GUI2.0/GUI.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/GUI2.0/Settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/GUI2.0/Settings.py" afterDir="false" />
@@ -10,6 +12,13 @@
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -74,7 +83,21 @@
       <option name="project" value="LOCAL" />
       <updated>1669582942350</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="normal grid for main form">
+      <created>1669585005704</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1669585005704</updated>
+    </task>
+    <task id="LOCAL-00003" summary="normal grid for main form">
+      <created>1669585015737</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1669585015737</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -90,6 +113,7 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="fix transit line" />
-    <option name="LAST_COMMIT_MESSAGE" value="fix transit line" />
+    <MESSAGE value="normal grid for main form" />
+    <option name="LAST_COMMIT_MESSAGE" value="normal grid for main form" />
   </component>
 </project>

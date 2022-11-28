@@ -15,13 +15,14 @@ CANVAS_SCROLL_CURSOR = "fleur"
 WINDOW = Tk()
 WINDOW.geometry("{}x{}+0+0".format(WINDOW_W, WINDOW_H))
 WINDOW.title("Gui")
-WINDOW.resizable(0, 0)
+WINDOW.resizable(False, False)
 
 # canvas initialization
-MAXY = 10000
-MAXX = 10000
-MINX = -10000
-MINY = -10000
+LEN = 10000
+MAXY = LEN
+MAXX = LEN
+MINX = -LEN
+MINY = -LEN
 CANVAS = Canvas(WINDOW, bg=CANVAS_BG_COLOR, cursor=CANVAS_ADD_CURSOR, scrollregion=(MINX, MINY, MAXX, MAXY))
 
 # scrollbars for canvas

@@ -1,10 +1,14 @@
 import tkinter
 from tkinter import *
+from AddLineForm import *
+from EditLineForm import *
 from Settings import *
 from tkinter.colorchooser import askcolor
 from Primitives import *
 import math
 import enum
+
+
 # from numba import njit
 
 
@@ -36,6 +40,8 @@ class Engine(object):
         self.work_mode = self.WorkingMode.add_mode
         self.transit = self.TransitMode.nothing
         self.projection_mode = self.ProjectionMode.xy
+        self.line_text_flag = False
+        self.is_first_cursor_pos_on_line = False
 
         # objects
         self.current_zero_coord = [0, 0]
@@ -45,6 +51,7 @@ class Engine(object):
         self.line_points = [None, None]
         self.lines = []
         self.current_line = None
+        self.current_lines = []
 
         # init tk window
         self.root = WINDOW
@@ -55,17 +62,19 @@ class Engine(object):
         self.x_bar = XBAR
 
         # buttons init
-        self.color_button = Button(text="Цвет", font=BUTTON_FONT,
+        self.line_button = Button(self.root, text="Добавить линию", font=BUTTON_FONT,
+                                  command=self._open_add_line_form)
+        self.color_button = Button(self.root, text="Цвет", font=BUTTON_FONT,
                                    command=self._set_color)
-        self.add_button = Button(text="Добавить", font=BUTTON_FONT,
+        self.add_button = Button(self.root, text="Добавить", font=BUTTON_FONT,
                                  command=self._set_add, relief=SUNKEN)
-        self.edit_button = Button(text="Изменить", font=BUTTON_FONT,
+        self.edit_button = Button(self.root, text="Изменить", font=BUTTON_FONT,
                                   command=self._set_edit)
-        self.xy_button = Button(text="XY", font=BUTTON_FONT,
+        self.xy_button = Button(self.root, text="XY", font=BUTTON_FONT,
                                 command=self._set_xy_projection, relief=SUNKEN)
-        self.zy_button = Button(text="ZY", font=BUTTON_FONT,
+        self.zy_button = Button(self.root, text="ZY", font=BUTTON_FONT,
                                 command=self._set_zy_projection)
-        self.xz_button = Button(text="XZ", font=BUTTON_FONT,
+        self.xz_button = Button(self.root, text="XZ", font=BUTTON_FONT,
                                 command=self._set_xz_projection)
 
         # init slider
@@ -80,10 +89,12 @@ class Engine(object):
         self.canvas.bind("<ButtonRelease-1>", self._canvas_b1_release)
         self.width_slider.bind("<B1-Motion>", self._set_width)
         self.canvas.bind("<Motion>", self._update_status_bar)
-        self.canvas.bind("<1>", self._canvas_left_button_click)
+        self.canvas.bind("<1>", self._canvas_b1_click)
         self.x_bar.bind("<B1-Motion>", self._update_zero_x_coord)
         self.y_bar.bind("<B1-Motion>", self._update_zero_y_coord)
-        # self.canvas.bind("<3>", self._canvas_delete_button_hotkey)
+        self.root.bind("f", self._change_line_text_flag)
+        self.root.bind("<BackSpace>", self._backspace_clicked)
+        self.canvas.bind("<Control-1>", self._canvas_control_b1_clicked)
 
         # grid window objects
         self.canvas.grid(row=0, column=0, columnspan=7, rowspan=7, padx=5, pady=5, sticky=NSEW)
@@ -95,6 +106,7 @@ class Engine(object):
         self.width_label.grid(row=2, column=7, padx=5, pady=5, sticky=NSEW)
         self.width_slider.grid(row=2, column=8, columnspan=5, padx=5, pady=5, sticky=NSEW)
         self.color_button.grid(row=3, column=7, padx=5, pady=5, columnspan=6, sticky=NSEW)
+        self.line_button.grid(row=4, column=7, padx=5, pady=5, columnspan=6, sticky=NSEW)
         self.status_bar.grid(row=7, column=0, columnspan=7, padx=5, pady=5, sticky=NSEW)
 
         # grid configure
@@ -105,6 +117,27 @@ class Engine(object):
 
     # handlers
     ###############################################################
+    def _backspace_clicked(self, event):
+        if self.current_line is not None and self.current_line not in self.current_lines:
+            self.lines.remove(self.current_line)
+            self.current_line = None
+            self.redraw_scene()
+        if len(self.current_lines) != 0:
+            for i in range(len(self.current_lines)):
+                self.lines.remove(self.current_lines[i])
+            self.redraw_scene()
+
+    def _open_edit_line_form(self):
+        if self.current_line is None:
+            tkinter.messagebox.showerror("Ошибка", "Выберите прямую для изменения")
+            return
+        form = EditLineForm(self)
+        form.grab_set()
+
+    def _open_add_line_form(self):
+        form = AddLineForm(self)
+        form.grab_set()
+
     # transit zero coord by x-scrollbar
     def _update_zero_x_coord(self, event):
         self.current_zero_coord[0] = int(self.x_bar.get()[0] * 2 * MAXX + MINX)
@@ -115,6 +148,19 @@ class Engine(object):
         self.current_zero_coord[1] = int(self.y_bar.get()[0] * 2 * MAXY + MINY)
         # print(self.current_zero_coord)
 
+    # change line text visible
+    def _change_line_text_flag(self, event):
+        self.line_text_flag = True if self.line_text_flag == False else False
+        self.redraw_scene()
+
+    # set color and width from current_line
+    def _set_color_width_from_line(self, line: Line):
+        if line is not None:
+            self.line_color = line.color
+            self.line_width = line.width
+            self.color_button.config(fg=line.color)
+            self.width_slider.set(line.width)
+
     # set color
     def _set_color(self):
         color = askcolor()[1]
@@ -122,15 +168,17 @@ class Engine(object):
             self.line_color = color
             self.color_button.config(fg=f'{color}')
             if self.work_mode == self.WorkingMode.edit_mode:
-                self.current_line.color = color
-                self._redraw_scene()
+                if self.current_line is not None:
+                    self.current_line.color = color
+                self.redraw_scene()
 
     # set width
     def _set_width(self, event):
         self.line_width = self.width_slider.get()
         if self.work_mode == self.WorkingMode.edit_mode:
-            self.current_line.width = self.width_slider.get()
-            self._redraw_scene()
+            if self.current_line is not None:
+                self.current_line.width = self.width_slider.get()
+            self.redraw_scene()
 
     # set edit mode
     def _set_edit(self):
@@ -139,7 +187,9 @@ class Engine(object):
         self.add_button.config(relief=RAISED)
         self.line_points = [None, None]
         self.current_line = None
+        self.current_lines = []
         self.work_mode = self.WorkingMode.edit_mode
+        self.line_button.config(text="Изменить линию", command=self._open_edit_line_form)
 
     # set add mode
     def _set_add(self):
@@ -148,7 +198,9 @@ class Engine(object):
         self.add_button.config(relief=SUNKEN)
         self.line_points = [None, None]
         self.current_line = None
+        self.current_lines = []
         self.work_mode = self.WorkingMode.add_mode
+        self.line_button.config(text="Добавить линию", command=self._open_add_line_form)
 
     # set projection mode methods
     def _set_xy_projection(self):
@@ -156,21 +208,21 @@ class Engine(object):
         self.xy_button.config(relief=SUNKEN)
         self.zy_button.config(relief=RAISED)
         self.xz_button.config(relief=RAISED)
-        self._redraw_scene()
+        self.redraw_scene()
 
     def _set_zy_projection(self):
         self.projection_mode = self.ProjectionMode.zy
         self.xy_button.config(relief=RAISED)
         self.zy_button.config(relief=SUNKEN)
         self.xz_button.config(relief=RAISED)
-        self._redraw_scene()
+        self.redraw_scene()
 
     def _set_xz_projection(self):
         self.projection_mode = self.ProjectionMode.xz
         self.xy_button.config(relief=RAISED)
         self.zy_button.config(relief=RAISED)
         self.xz_button.config(relief=SUNKEN)
-        self._redraw_scene()
+        self.redraw_scene()
 
     # update status bar
     def _update_status_bar(self, event):
@@ -220,8 +272,9 @@ class Engine(object):
 
     # left button click and motion (draw line or transit)
     def _canvas_b1_motion(self, event):
-        self.current_mouse = self._check_mouse_coord(self.current_zero_coord[0] + event.x, self.current_zero_coord[1] + event.y)
-        self._redraw_scene()
+        self.current_mouse = self._check_mouse_coord(self.current_zero_coord[0] + event.x,
+                                                     self.current_zero_coord[1] + event.y)
+        self.redraw_scene()
         match self.work_mode:
             case self.WorkingMode.add_mode:
                 self._add_line()
@@ -243,15 +296,38 @@ class Engine(object):
             case self.WorkingMode.edit_mode:
                 self.transit = self.TransitMode.nothing
 
-    # left button click (chose line)
-    def _canvas_left_button_click(self, event):
+    # left button click (choose line)
+    def _canvas_b1_click(self, event):
         if self.work_mode == self.WorkingMode.edit_mode:
             mouse = self._check_mouse_coord(self.current_zero_coord[0] + event.x, self.current_zero_coord[1] + event.y)
+            flag = False
             for i in range(len(self.lines)):
                 if self._is_cursor_on_line(mouse[0], mouse[1], self.lines[i]):
                     self.current_line = self.lines[i]
+                    flag = True
                     break
+            if not flag:
+                self.current_line = None
+                self.current_lines = []
+            self._set_color_width_from_line(self.current_line)
             self._fill_status_bar(mouse[0], mouse[1])
+            self.redraw_scene()
+
+    def _canvas_control_b1_clicked(self, event):
+        if self.work_mode == self.WorkingMode.edit_mode:
+            mouse = self._check_mouse_coord(self.current_zero_coord[0] + event.x, self.current_zero_coord[1] + event.y)
+            flag = False
+            for i in range(len(self.lines)):
+                if self._is_cursor_on_line(mouse[0], mouse[1], self.lines[i]):
+                    self.current_lines.append(self.lines[i])
+                    self.current_line = self.lines[i]
+                    flag = True
+            if not flag:
+                self.current_lines = []
+                self.current_line = None
+            self._set_color_width_from_line(self.current_line)
+            self._fill_status_bar(mouse[0], mouse[1])
+            self.redraw_scene()
 
     # calculate methods
     ###############################################################
@@ -333,15 +409,29 @@ class Engine(object):
                 fill=line.color,
                 smooth=True
             )
+            size = 1.5
+            # if line is current
+            if line == self.current_line:
+                self.canvas.create_oval(line.p1.x - size * line.width, line.p1.y - size * line.width,
+                                        line.p1.x + size * line.width, line.p1.y + size * line.width, fill="red")
+                self.canvas.create_oval(line.p2.x - size * line.width, line.p2.y - size * line.width,
+                                        line.p2.x + size * line.width, line.p2.y + size * line.width, fill="red")
+            for i in range(len(self.current_lines)):
+                self.canvas.create_oval(self.current_lines[i].p1.x - size * self.current_lines[i].width, self.current_lines[i].p1.y - size * self.current_lines[i].width,
+                                        self.current_lines[i].p1.x + size * self.current_lines[i].width, self.current_lines[i].p1.y + size * self.current_lines[i].width, fill="red")
+                self.canvas.create_oval(self.current_lines[i].p2.x - size * self.current_lines[i].width, self.current_lines[i].p2.y - size * self.current_lines[i].width,
+                                        self.current_lines[i].p2.x + size * self.current_lines[i].width, self.current_lines[i].p2.y + size * self.current_lines[i].width, fill="red")
+
             # drawing line text
-            canvas_p1_projection = self._get_canvas_coord_from_projection_point(line.p1)
-            canvas_p2_projection = self._get_canvas_coord_from_projection_point(line.p2)
-            anchor_p1 = self._get_line_text_anchor(canvas_p1_projection)
-            anchor_p2 = self._get_line_text_anchor(canvas_p2_projection)
-            opt1 = self._get_line_text_options(line.p1, anchor_p1)
-            opt2 = self._get_line_text_options(line.p2, anchor_p2)
-            self.canvas.create_text(canvas_p1_projection[0], canvas_p1_projection[1], opt1)
-            self.canvas.create_text(canvas_p2_projection[0], canvas_p2_projection[1], opt2)
+            if self.line_text_flag:
+                canvas_p1_projection = self._get_canvas_coord_from_projection_point(line.p1)
+                canvas_p2_projection = self._get_canvas_coord_from_projection_point(line.p2)
+                anchor_p1 = self._get_line_text_anchor(canvas_p1_projection)
+                anchor_p2 = self._get_line_text_anchor(canvas_p2_projection)
+                opt1 = self._get_line_text_options(line.p1, anchor_p1)
+                opt2 = self._get_line_text_options(line.p2, anchor_p2)
+                self.canvas.create_text(canvas_p1_projection[0], canvas_p1_projection[1], opt1)
+                self.canvas.create_text(canvas_p2_projection[0], canvas_p2_projection[1], opt2)
 
     # sub methods for draw line
     def _get_line_text_options(self, point, anchor):
@@ -459,7 +549,7 @@ class Engine(object):
     # render methods
     ###############################################################
     # redraw scene
-    def _redraw_scene(self):
+    def redraw_scene(self):
         self.canvas.delete("all")
         # draw lines primitive
         for i in range(len(self.lines)):
