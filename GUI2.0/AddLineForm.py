@@ -1,3 +1,4 @@
+import math
 import tkinter.messagebox
 from tkinter import *
 from Primitives import *
@@ -59,7 +60,7 @@ class AddLineForm(Toplevel):
             if isinstance(i, Entry):
                 try:
                     value = int(i.get())
-                    if value > -LEN and value < LEN:
+                    if math.fabs(value) < LEN:
                         values.append(value)
                     else:
                         raise 0

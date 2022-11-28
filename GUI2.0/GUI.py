@@ -535,7 +535,6 @@ class Engine(object):
             return False
         return True
 
-
     ##############render methods##############
     # redraw scene
     def redraw_scene(self):
