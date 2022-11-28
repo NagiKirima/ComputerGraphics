@@ -1,4 +1,3 @@
-import tkinter
 from tkinter import *
 from AddLineForm import *
 from EditLineForm import *
@@ -9,12 +8,8 @@ import math
 import enum
 
 
-# from numba import njit
-
-
 class Engine(object):
-    # enums
-    ###############################################################
+    ###########enums#############
     class ProjectionMode(enum.Enum):
         xy = 0,
         zy = 1,
@@ -30,8 +25,7 @@ class Engine(object):
         add_mode = 0
         edit_mode = 1
 
-    # initialization
-    ###############################################################
+    ########initialization#########
     def __init__(self):
         self.line_color = "#000000"
         self.line_width = 1
@@ -40,7 +34,7 @@ class Engine(object):
         self.work_mode = self.WorkingMode.add_mode
         self.transit = self.TransitMode.nothing
         self.projection_mode = self.ProjectionMode.xy
-        self.line_text_flag = False
+        self.line_text_flag = True
         self.is_first_cursor_pos_on_line = False
 
         # objects
@@ -115,25 +109,27 @@ class Engine(object):
             self.root.columnconfigure(i, minsize=50)
         self.root.columnconfigure(0, weight=1)
 
-    # handlers
-    ###############################################################
+    ###########handlers##############
+    # delete current line or group of lines
     def _backspace_clicked(self, event):
-        if self.current_line is not None and self.current_line not in self.current_lines:
+        if self.current_line is not None:
             self.lines.remove(self.current_line)
             self.current_line = None
-            self.redraw_scene()
         if len(self.current_lines) != 0:
-            for i in range(len(self.current_lines)):
-                self.lines.remove(self.current_lines[i])
-            self.redraw_scene()
+            for i in self.current_lines:
+                self.lines.remove(i)
+            self.current_lines = []
+        self.redraw_scene()
 
+    # open dialog window for editing line
     def _open_edit_line_form(self):
         if self.current_line is None:
-            tkinter.messagebox.showerror("Ошибка", "Выберите прямую для изменения")
+            tkinter.messagebox.showerror("Ошибка", "Выберите 1 прямую для изменения")
             return
         form = EditLineForm(self)
         form.grab_set()
 
+    # open dialog window for adding line
     def _open_add_line_form(self):
         form = AddLineForm(self)
         form.grab_set()
@@ -170,6 +166,8 @@ class Engine(object):
             if self.work_mode == self.WorkingMode.edit_mode:
                 if self.current_line is not None:
                     self.current_line.color = color
+                for i in self.current_lines:
+                    i.color = color
                 self.redraw_scene()
 
     # set width
@@ -178,6 +176,8 @@ class Engine(object):
         if self.work_mode == self.WorkingMode.edit_mode:
             if self.current_line is not None:
                 self.current_line.width = self.width_slider.get()
+            for i in self.current_lines:
+                i.width = self.width_slider.get()
             self.redraw_scene()
 
     # set edit mode
@@ -190,6 +190,7 @@ class Engine(object):
         self.current_lines = []
         self.work_mode = self.WorkingMode.edit_mode
         self.line_button.config(text="Изменить линию", command=self._open_edit_line_form)
+        self.redraw_scene()
 
     # set add mode
     def _set_add(self):
@@ -201,6 +202,7 @@ class Engine(object):
         self.current_lines = []
         self.work_mode = self.WorkingMode.add_mode
         self.line_button.config(text="Добавить линию", command=self._open_add_line_form)
+        self.redraw_scene()
 
     # set projection mode methods
     def _set_xy_projection(self):
@@ -308,7 +310,7 @@ class Engine(object):
                     break
             if not flag:
                 self.current_line = None
-                self.current_lines = []
+            self.current_lines = []
             self._set_color_width_from_line(self.current_line)
             self._fill_status_bar(mouse[0], mouse[1])
             self.redraw_scene()
@@ -319,18 +321,18 @@ class Engine(object):
             flag = False
             for i in range(len(self.lines)):
                 if self._is_cursor_on_line(mouse[0], mouse[1], self.lines[i]):
-                    self.current_lines.append(self.lines[i])
-                    self.current_line = self.lines[i]
+                    if self.lines[i] not in self.current_lines:
+                        self.current_lines.append(self.lines[i])
                     flag = True
             if not flag:
                 self.current_lines = []
-                self.current_line = None
-            self._set_color_width_from_line(self.current_line)
+            self.current_line = None
+            if flag:
+                self._set_color_width_from_line(self.current_lines[-1])
             self._fill_status_bar(mouse[0], mouse[1])
             self.redraw_scene()
 
-    # calculate methods
-    ###############################################################
+    ##########calculate methods##################
     # check mouse pos
     def _check_mouse_coord(self, x, y):
         if x < -MAXX:
@@ -391,8 +393,8 @@ class Engine(object):
             self.line_color,
             self.line_width
         )
-        self._draw_line(buffer_line)
         self.current_line = buffer_line
+        self._draw_line(self.current_line)
 
     # draw line
     def _draw_line(self, line):
@@ -406,22 +408,9 @@ class Engine(object):
                 canvas_x2,
                 canvas_y2,
                 width=line.width,
-                fill=line.color,
+                fill="red" if self.current_line == line or line in self.current_lines else line.color,
                 smooth=True
             )
-            size = 1.5
-            # if line is current
-            if line == self.current_line:
-                self.canvas.create_oval(line.p1.x - size * line.width, line.p1.y - size * line.width,
-                                        line.p1.x + size * line.width, line.p1.y + size * line.width, fill="red")
-                self.canvas.create_oval(line.p2.x - size * line.width, line.p2.y - size * line.width,
-                                        line.p2.x + size * line.width, line.p2.y + size * line.width, fill="red")
-            for i in range(len(self.current_lines)):
-                self.canvas.create_oval(self.current_lines[i].p1.x - size * self.current_lines[i].width, self.current_lines[i].p1.y - size * self.current_lines[i].width,
-                                        self.current_lines[i].p1.x + size * self.current_lines[i].width, self.current_lines[i].p1.y + size * self.current_lines[i].width, fill="red")
-                self.canvas.create_oval(self.current_lines[i].p2.x - size * self.current_lines[i].width, self.current_lines[i].p2.y - size * self.current_lines[i].width,
-                                        self.current_lines[i].p2.x + size * self.current_lines[i].width, self.current_lines[i].p2.y + size * self.current_lines[i].width, fill="red")
-
             # drawing line text
             if self.line_text_flag:
                 canvas_p1_projection = self._get_canvas_coord_from_projection_point(line.p1)
@@ -546,8 +535,8 @@ class Engine(object):
             return False
         return True
 
-    # render methods
-    ###############################################################
+
+    ##############render methods##############
     # redraw scene
     def redraw_scene(self):
         self.canvas.delete("all")
