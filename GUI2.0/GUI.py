@@ -82,13 +82,14 @@ class Engine(object):
         self.canvas.bind("<B1-Motion>", self._canvas_b1_motion)
         self.canvas.bind("<ButtonRelease-1>", self._canvas_b1_release)
         self.width_slider.bind("<B1-Motion>", self._set_width)
-        self.canvas.bind("<Motion>", self._update_status_bar)
+        self.canvas.bind("<Motion>", self._cursor_motion)
         self.canvas.bind("<1>", self._canvas_b1_click)
         self.x_bar.bind("<B1-Motion>", self._update_zero_x_coord)
         self.y_bar.bind("<B1-Motion>", self._update_zero_y_coord)
         self.root.bind("f", self._change_line_text_flag)
         self.root.bind("<BackSpace>", self._backspace_clicked)
         self.canvas.bind("<Control-1>", self._canvas_control_b1_clicked)
+        self.canvas.bind("<Control-B1-Motion>", self._canvas_control_b1_motion)
 
         # grid window objects
         self.canvas.grid(row=0, column=0, columnspan=7, rowspan=7, padx=5, pady=5, sticky=NSEW)
@@ -226,9 +227,10 @@ class Engine(object):
         self.xz_button.config(relief=SUNKEN)
         self.redraw_scene()
 
-    # update status bar
-    def _update_status_bar(self, event):
+    # handler canvas motion event
+    def _cursor_motion(self, event):
         self._fill_status_bar(self.current_zero_coord[0] + event.x, self.current_zero_coord[1] + event.y)
+        self.redraw_scene()
 
     # fill status bar label
     def _fill_status_bar(self, x, y):
@@ -274,6 +276,7 @@ class Engine(object):
 
     # left button click and motion (draw line or transit)
     def _canvas_b1_motion(self, event):
+        print("1-m")
         self.current_mouse = self._check_mouse_coord(self.current_zero_coord[0] + event.x,
                                                      self.current_zero_coord[1] + event.y)
         self.redraw_scene()
@@ -332,6 +335,8 @@ class Engine(object):
             self._fill_status_bar(mouse[0], mouse[1])
             self.redraw_scene()
 
+    def _canvas_control_b1_motion(self, event):
+        print("c-1-m")
     ##########calculate methods##################
     # check mouse pos
     def _check_mouse_coord(self, x, y):
