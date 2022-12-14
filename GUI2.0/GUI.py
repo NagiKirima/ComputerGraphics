@@ -124,8 +124,8 @@ class Engine(object):
 
     # open dialog window for editing line
     def _open_edit_line_form(self):
-        if self.current_line is None:
-            tkinter.messagebox.showerror("Ошибка", "Выберите 1 прямую для изменения")
+        if self.current_line is None and len(self.current_lines) == 0:
+            tkinter.messagebox.showerror("Ошибка", "Выберите прямые для изменения")
             return
         form = EditLineForm(self)
         form.grab_set()
@@ -138,12 +138,10 @@ class Engine(object):
     # transit zero coord by x-scrollbar
     def _update_zero_x_coord(self, event):
         self.current_zero_coord[0] = int(self.x_bar.get()[0] * 2 * MAXX + MINX)
-        # print(self.current_zero_coord)
 
     # transit zero coord by y_scrollbar
     def _update_zero_y_coord(self, event):
         self.current_zero_coord[1] = int(self.y_bar.get()[0] * 2 * MAXY + MINY)
-        # print(self.current_zero_coord)
 
     # change line text visible
     def _change_line_text_flag(self, event):
@@ -276,7 +274,6 @@ class Engine(object):
 
     # left button click and motion (draw line or transit)
     def _canvas_b1_motion(self, event):
-        print("1-m")
         self.current_mouse = self._check_mouse_coord(self.current_zero_coord[0] + event.x,
                                                      self.current_zero_coord[1] + event.y)
         self.redraw_scene()
@@ -336,7 +333,7 @@ class Engine(object):
             self.redraw_scene()
 
     def _canvas_control_b1_motion(self, event):
-        print("c-1-m")
+        pass
     ##########calculate methods##################
     # check mouse pos
     def _check_mouse_coord(self, x, y):
