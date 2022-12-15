@@ -70,6 +70,11 @@ class Engine(object):
                                 command=self._set_zy_projection)
         self.xz_button = Button(self.root, text="XZ", font=BUTTON_FONT,
                                 command=self._set_xz_projection)
+        self.save_button = Button(self.root, text="Сохранить проект", font=BUTTON_FONT)
+        self.load_button = Button(self.root, text="Загрузить проект", font=BUTTON_FONT)
+        self.operations_2d_button = Button(self.root, text="2D операции", font=BUTTON_FONT)
+        self.operations_3d_button = Button(self.root, text="3D операции", font=BUTTON_FONT)
+        self.trimetric_matrix_button = Button(self.root, text="Осмотр", font=BUTTON_FONT)
 
         # init slider
         self.width_slider = WIDTH_SCALE
@@ -92,7 +97,7 @@ class Engine(object):
         self.canvas.bind("<Control-B1-Motion>", self._canvas_control_b1_motion)
 
         # grid window objects
-        self.canvas.grid(row=0, column=0, columnspan=7, rowspan=7, padx=5, pady=5, sticky=NSEW)
+        self.canvas.grid(row=0, column=0, columnspan=7, rowspan=9, padx=5, pady=5, sticky=NSEW)
         self.add_button.grid(row=0, column=7, columnspan=3, padx=5, pady=5, sticky=NSEW)
         self.edit_button.grid(row=0, column=10, columnspan=3, padx=5, pady=5, sticky=NSEW)
         self.xy_button.grid(row=1, column=7, columnspan=2, padx=5, pady=5, sticky=NSEW)
@@ -102,10 +107,15 @@ class Engine(object):
         self.width_slider.grid(row=2, column=8, columnspan=5, padx=5, pady=5, sticky=NSEW)
         self.color_button.grid(row=3, column=7, padx=5, pady=5, columnspan=6, sticky=NSEW)
         self.line_button.grid(row=4, column=7, padx=5, pady=5, columnspan=6, sticky=NSEW)
-        self.status_bar.grid(row=7, column=0, columnspan=7, padx=5, pady=5, sticky=NSEW)
+        self.operations_2d_button.grid(row=5, column=7, padx=5, pady=5, columnspan=3, sticky=NSEW)
+        self.operations_3d_button.grid(row=5, column=10, padx=5, pady=5, columnspan=3, sticky=NSEW)
+        self.trimetric_matrix_button.grid(row=6, column=7, padx=5, pady=5, columnspan=6, sticky=NSEW)
+        self.save_button.grid(row=7, column=7, padx=5, pady=5, columnspan=3, sticky=NSEW)
+        self.load_button.grid(row=7, column=10, padx=5, pady=5, columnspan=3, sticky=NSEW)
+        self.status_bar.grid(row=9, column=0, columnspan=7, padx=5, pady=5, sticky=NSEW)
 
         # grid configure
-        self.root.rowconfigure(6, weight=1)
+        self.root.rowconfigure(8, weight=1)
         for i in range(7, 13):
             self.root.columnconfigure(i, minsize=50)
         self.root.columnconfigure(0, weight=1)
@@ -410,7 +420,8 @@ class Engine(object):
                 canvas_x2,
                 canvas_y2,
                 width=line.width,
-                fill="red" if self.current_line == line or line in self.current_lines else line.color,
+                fill="red" if (self.current_line == line or line in self.current_lines)
+                              and self.work_mode != self.WorkingMode.add_mode else line.color,
                 smooth=True
             )
             # drawing line text
