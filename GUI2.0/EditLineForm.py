@@ -52,24 +52,34 @@ class EditLineForm(Toplevel):
 
     @staticmethod
     def _is_valid(value):
-        return True if re.match("^-$|^$|-?(0|[1-9]\d*)(?<!-0)$", value) is not None and math.fabs(int(value)) <= LEN else False
+        if re.match("^-$|^$|-?(0|[1-9]\d*)(?<!-0)$", value) is not None:
+            if value != "":
+                return math.fabs(int(value)) <= LEN
+            return True
+        return False
 
     def _send_button_click(self):
-        if self.mainapp.current_line is not None:
-            for i in range(len(self.mainapp.lines)):
-                if self.mainapp.lines[i] == self.mainapp.current_line:
-                    bffr = self._get_line_from_entries(self.field_object_list[0], self.mainapp.current_line)
-                    self.mainapp.current_line = bffr
-                    self.mainapp.lines[i] = bffr
-        elif len(self.mainapp.current_lines) != 0:
-            for i in range(len(self.field_object_list)):
-                for j in range(len(self.mainapp.lines)):
-                    if self.mainapp.lines[j] == self.mainapp.current_lines[i]:
-                        bffr = self._get_line_from_entries(self.field_object_list[i], self.mainapp.current_lines[i])
-                        self.mainapp.current_lines[i] = bffr
-                        self.mainapp.lines[j] = bffr
-        self.mainapp.redraw_scene()
-        self.destroy()
+        try:
+            lines = []
+            if self.mainapp.current_line is not None:
+                lines.append(self._get_line_from_entries(self.field_object_list[0], self.mainapp.current_line))
+                for i in self.mainapp.lines:
+                    if i == self.mainapp.current_line:
+                        i = lines[0]
+                        self.mainapp.current_line = lines[0]
+            elif len(self.mainapp.current_lines) != 0:
+                for i in range(len(self.field_object_list)):
+                    lines.append(self._get_line_from_entries(self.field_object_list[i], self.mainapp.current_lines[i]))
+
+                for i in range(len(self.field_object_list)):
+                    for j in range(len(self.mainapp.lines)):
+                        if self.mainapp.lines[j] == self.mainapp.current_lines[i]:
+                            self.mainapp.current_lines[i] = lines[i]
+                            self.mainapp.lines[j] = lines[i]
+            self.mainapp.redraw_scene()
+            self.destroy()
+        except:
+            tkinter.messagebox.showerror("Ошибка", f"Введите корректные значения в поля (-{LEN} <= value <= {LEN})")
 
     def _add_objects_in_list(self, line):
         self.field_object_list.append(
