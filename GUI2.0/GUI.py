@@ -1,6 +1,7 @@
 from tkinter import *
 from AddLineForm import *
 from EditLineForm import *
+from FormFor2dOperation import *
 from Settings import *
 from tkinter.colorchooser import askcolor
 from Primitives import *
@@ -72,7 +73,8 @@ class Engine(object):
                                 command=self._set_xz_projection)
         self.save_button = Button(self.root, text="Сохранить проект", font=BUTTON_FONT)
         self.load_button = Button(self.root, text="Загрузить проект", font=BUTTON_FONT)
-        self.operations_2d_button = Button(self.root, text="2D операции", font=BUTTON_FONT)
+        self.operations_2d_button = Button(self.root, text="2D операции", font=BUTTON_FONT,
+                                           command=self._open_2d_opeation_form)
         self.operations_3d_button = Button(self.root, text="3D операции", font=BUTTON_FONT)
         self.trimetric_matrix_button = Button(self.root, text="Осмотр", font=BUTTON_FONT)
 
@@ -107,9 +109,6 @@ class Engine(object):
         self.width_slider.grid(row=2, column=8, columnspan=5, padx=5, pady=5, sticky=NSEW)
         self.color_button.grid(row=3, column=7, padx=5, pady=5, columnspan=6, sticky=NSEW)
         self.line_button.grid(row=4, column=7, padx=5, pady=5, columnspan=6, sticky=NSEW)
-        self.operations_2d_button.grid(row=5, column=7, padx=5, pady=5, columnspan=3, sticky=NSEW)
-        self.operations_3d_button.grid(row=5, column=10, padx=5, pady=5, columnspan=3, sticky=NSEW)
-        self.trimetric_matrix_button.grid(row=6, column=7, padx=5, pady=5, columnspan=6, sticky=NSEW)
         self.save_button.grid(row=7, column=7, padx=5, pady=5, columnspan=3, sticky=NSEW)
         self.load_button.grid(row=7, column=10, padx=5, pady=5, columnspan=3, sticky=NSEW)
         self.status_bar.grid(row=9, column=0, columnspan=7, padx=5, pady=5, sticky=NSEW)
@@ -132,6 +131,13 @@ class Engine(object):
             self.current_lines = []
         self.redraw_scene()
 
+    # open dialog window with 2d operations
+    def _open_2d_opeation_form(self):
+        if self.current_line is None and len(self.current_lines) == 0:
+            tkinter.messagebox.showerror("Ошибка", "Выберите прямые для изменения")
+            return
+        form = FormFor2dOperation(self)
+        form.grab_set()
     # open dialog window for editing line
     def _open_edit_line_form(self):
         if self.current_line is None and len(self.current_lines) == 0:
@@ -199,6 +205,9 @@ class Engine(object):
         self.current_lines = []
         self.work_mode = self.WorkingMode.edit_mode
         self.line_button.config(text="Изменить линию", command=self._open_edit_line_form)
+        self.operations_2d_button.grid(row=5, column=7, padx=5, pady=5, columnspan=3, sticky=NSEW)
+        self.operations_3d_button.grid(row=5, column=10, padx=5, pady=5, columnspan=3, sticky=NSEW)
+        self.trimetric_matrix_button.grid(row=6, column=7, padx=5, pady=5, columnspan=6, sticky=NSEW)
         self.redraw_scene()
 
     # set add mode
@@ -211,6 +220,9 @@ class Engine(object):
         self.current_lines = []
         self.work_mode = self.WorkingMode.add_mode
         self.line_button.config(text="Добавить линию", command=self._open_add_line_form)
+        self.operations_2d_button.grid_remove()
+        self.operations_3d_button.grid_remove()
+        self.trimetric_matrix_button.grid_remove()
         self.redraw_scene()
 
     # set projection mode methods

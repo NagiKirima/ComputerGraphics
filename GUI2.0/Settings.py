@@ -38,7 +38,7 @@ CANVAS.config(xscrollcommand=XBAR.set, yscrollcommand=YBAR.set)
 CANVAS.pack(side=LEFT, expand=True, fill=BOTH)
 
 # slider initialization
-WIDTH_SCALE = Scale(WINDOW, orient=HORIZONTAL, from_=1, to=10, resolution=1)
+WIDTH_SCALE = Scale(WINDOW, orient=HORIZONTAL, from_=1, to=10, resolution=1, font=LABEL_FONT)
 
 # init labels
 STATUS_BAR = Label(text="", font=LABEL_FONT, anchor=W)
