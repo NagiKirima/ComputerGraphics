@@ -8,26 +8,30 @@ import GUI
 import re
 
 
+class ProjectionMode(enum.Enum):
+    xy = 0,
+    zy = 1,
+    xz = 2
+
 class FormFor2dOperation(Toplevel):
-    class ProjectionMode(enum.Enum):
-        xy = 0,
-        zy = 1,
-        xz = 2
 
     def __init__(self, mainapp, master=None):
         super().__init__(master=master)
         self.protocol("WM_DELETE_WINDOW", self._on_closing)
         self.title("2D operations")
-        self.geometry("600x600")
+        self.geometry("600x400")
         self.resizable(False, False)
         self.mainapp = mainapp
         self.check = (self.register(self._is_valid), "%P")
-        self.proj_mode = self.ProjectionMode.xy
+        self.proj_mode = ProjectionMode.xy
 
         # projection mode buttons
-        self.xy_button = Button(self, text="XY", font=BUTTON_FONT, relief=SUNKEN)
-        self.zy_button = Button(self, text="ZY", font=BUTTON_FONT)
-        self.xz_button = Button(self, text="XZ", font=BUTTON_FONT)
+        self.xy_button = Button(self, text="XY", font=BUTTON_FONT, relief=SUNKEN,
+                                command=self._set_projection_xy)
+        self.zy_button = Button(self, text="ZY", font=BUTTON_FONT,
+                                command=self._set_projection_zy)
+        self.xz_button = Button(self, text="XZ", font=BUTTON_FONT,
+                                command=self._set_projection_xz)
 
         # transfer operation widgets
         self.transfer_m_entry = Entry(self, validatecommand=self.check, font=LABEL_FONT)
@@ -96,15 +100,30 @@ class FormFor2dOperation(Toplevel):
             self.columnconfigure(i, weight=1, minsize=50)
 
     def _set_defaults(self):
-        self.transfer_m_entry.insert(-1, str(1))
-        self.transfer_n_entry.insert(-1, str(1))
+        self.transfer_m_entry.insert(-1, str(0))
+        self.transfer_n_entry.insert(-1, str(0))
         self.scale_a_entry.insert(-1, str(1))
         self.scale_b_entry.insert(-1, str(1))
         self.projection_p_entry.insert(-1, str(1))
         self.projection_q_entry.insert(-1, str(1))
 
-    def _set_projection(self, event):
-        pass
+    def _set_projection_xy(self):
+        self.projection_mode = ProjectionMode.xy
+        self.xy_button.config(relief=SUNKEN)
+        self.zy_button.config(relief=RAISED)
+        self.xz_button.config(relief=RAISED)
+
+    def _set_projection_zy(self):
+        self.projection_mode = ProjectionMode.zy
+        self.xy_button.config(relief=RAISED)
+        self.zy_button.config(relief=SUNKEN)
+        self.xz_button.config(relief=RAISED)
+
+    def _set_projection_xz(self):
+        self.projection_mode = ProjectionMode.xz
+        self.xy_button.config(relief=RAISED)
+        self.zy_button.config(relief=RAISED)
+        self.xz_button.config(relief=SUNKEN)
 
     @staticmethod
     def _is_valid(value):
