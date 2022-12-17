@@ -25,12 +25,12 @@ class FormFor2dOperation(Toplevel):
                                 command=self._set_projection_xz)
 
         # transfer operation widgets
-        self.transfer_m_entry = Entry(self, validatecommand=self.check, font=LABEL_FONT)
-        self.transfer_n_entry = Entry(self, validatecommand=self.check, font=LABEL_FONT)
+        self.transfer_m_entry = Entry(self, validate="key", validatecommand=self.check, font=LABEL_FONT)
+        self.transfer_n_entry = Entry(self, validate="key", validatecommand=self.check, font=LABEL_FONT)
 
         # scale operation widgets
-        self.scale_a_entry = Entry(self, validatecommand=self.check, font=LABEL_FONT)
-        self.scale_b_entry = Entry(self, validatecommand=self.check, font=LABEL_FONT)
+        self.scale_a_entry = Entry(self, validate="key", validatecommand=self.check, font=LABEL_FONT)
+        self.scale_b_entry = Entry(self, validate="key", validatecommand=self.check, font=LABEL_FONT)
 
         # rotate operation widgets
         self.rotate_angle_scale = Scale(self, orient=HORIZONTAL, from_=-360, to=360, resolution=1, font=LABEL_FONT)
@@ -40,8 +40,8 @@ class FormFor2dOperation(Toplevel):
         self.mirror_radio_button_abc = Radiobutton(self, text='по абсциссе', value=1, font=LABEL_FONT)
 
         # projection operation widgets
-        self.projection_p_entry = Entry(self, validatecommand=self.check, font=LABEL_FONT)
-        self.projection_q_entry = Entry(self, validatecommand=self.check, font=LABEL_FONT)
+        self.projection_p_entry = Entry(self, validate="key", validatecommand=self.check, font=LABEL_FONT)
+        self.projection_q_entry = Entry(self, validate="key", validatecommand=self.check, font=LABEL_FONT)
 
         # confirm changes button
         self.send_button = Button(self, text="Применить", font=BUTTON_FONT, command=self._confirm)
@@ -129,7 +129,7 @@ class FormFor2dOperation(Toplevel):
 
     @staticmethod
     def _is_valid(value):
-        return re.match("^-$|^$|-?(0|[1-9]\d*)(?<!-0)$", value) is not None
+        return True if re.match("^-$|^$|-?(0|[1-9]\d*)(?<!-0)$", value) is not None else False
 
     def _on_closing(self):
         self.grab_release()
