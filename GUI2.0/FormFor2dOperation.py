@@ -1,20 +1,11 @@
-import math
-import tkinter.messagebox
-import enum
 from tkinter import *
-from Primitives import *
 from Settings import BUTTON_FONT, LABEL_FONT, LEN
-import GUI
 import re
+from Enums import *
+from CalculateOperation import Calculate
 
-
-class ProjectionMode(enum.Enum):
-    xy = 0,
-    zy = 1,
-    xz = 2
 
 class FormFor2dOperation(Toplevel):
-
     def __init__(self, mainapp, master=None):
         super().__init__(master=master)
         self.protocol("WM_DELETE_WINDOW", self._on_closing)
@@ -23,7 +14,7 @@ class FormFor2dOperation(Toplevel):
         self.resizable(False, False)
         self.mainapp = mainapp
         self.check = (self.register(self._is_valid), "%P")
-        self.proj_mode = ProjectionMode.xy
+        self.projection_mode = ProjectionMode.xy
 
         # projection mode buttons
         self.xy_button = Button(self, text="XY", font=BUTTON_FONT, relief=SUNKEN,
@@ -53,11 +44,22 @@ class FormFor2dOperation(Toplevel):
         self.projection_q_entry = Entry(self, validatecommand=self.check, font=LABEL_FONT)
 
         # confirm changes button
-        self.send_button = Button(self, text="Применить", font=BUTTON_FONT)
+        self.send_button = Button(self, text="Применить", font=BUTTON_FONT, command=self._confirm)
 
         # grid all widgets
         self._grid()
         self._set_defaults()
+
+    def _confirm(self):
+        if self.mainapp.current_line is not None:
+            pass
+        elif len(self.mainapp.current_lines) != 0:
+            Calculate.transit_2d(
+                self.mainapp.current_lines, self.projection_mode,
+                int(self.transfer_m_entry.get()), int(self.transfer_n_entry.get())
+            )
+        self.mainapp.redraw_scene()
+        self._on_closing()
 
     # grid
     def _grid(self):

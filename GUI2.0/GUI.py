@@ -1,40 +1,24 @@
 from tkinter import *
 from AddLineForm import *
 from EditLineForm import *
-from FormFor2dOperation import *
 from Settings import *
 from tkinter.colorchooser import askcolor
 from Primitives import *
 import math
-import enum
+from Enums import *
+from FormFor2dOperation import FormFor2dOperation
 
 
 class Engine(object):
-    ###########enums#############
-    class ProjectionMode(enum.Enum):
-        xy = 0,
-        zy = 1,
-        xz = 2
-
-    class TransitMode(enum.Enum):
-        point1 = 0
-        point2 = 1
-        parallel = 2
-        nothing = -1
-
-    class WorkingMode(enum.Enum):
-        add_mode = 0
-        edit_mode = 1
-
     ########initialization#########
     def __init__(self):
         self.line_color = "#000000"
         self.line_width = 1
 
         # mode flags
-        self.work_mode = self.WorkingMode.add_mode
-        self.transit = self.TransitMode.nothing
-        self.projection_mode = self.ProjectionMode.xy
+        self.work_mode = WorkingMode.add_mode
+        self.transit = TransitMode.nothing
+        self.projection_mode = ProjectionMode.xy
         self.line_text_flag = True
         self.is_first_cursor_pos_on_line = False
 
@@ -138,6 +122,7 @@ class Engine(object):
             return
         form = FormFor2dOperation(self)
         form.grab_set()
+
     # open dialog window for editing line
     def _open_edit_line_form(self):
         if self.current_line is None and len(self.current_lines) == 0:
@@ -178,7 +163,7 @@ class Engine(object):
         if color is not None:
             self.line_color = color
             self.color_button.config(fg=f'{color}')
-            if self.work_mode == self.WorkingMode.edit_mode:
+            if self.work_mode == WorkingMode.edit_mode:
                 if self.current_line is not None:
                     self.current_line.color = color
                 for i in self.current_lines:
@@ -188,7 +173,7 @@ class Engine(object):
     # set width
     def _set_width(self, event):
         self.line_width = self.width_slider.get()
-        if self.work_mode == self.WorkingMode.edit_mode:
+        if self.work_mode == WorkingMode.edit_mode:
             if self.current_line is not None:
                 self.current_line.width = self.width_slider.get()
             for i in self.current_lines:
@@ -203,7 +188,7 @@ class Engine(object):
         self.line_points = [None, None]
         self.current_line = None
         self.current_lines = []
-        self.work_mode = self.WorkingMode.edit_mode
+        self.work_mode = WorkingMode.edit_mode
         self.line_button.config(text="Изменить линию", command=self._open_edit_line_form)
         self.operations_2d_button.grid(row=5, column=7, padx=5, pady=5, columnspan=3, sticky=NSEW)
         self.operations_3d_button.grid(row=5, column=10, padx=5, pady=5, columnspan=3, sticky=NSEW)
@@ -218,7 +203,7 @@ class Engine(object):
         self.line_points = [None, None]
         self.current_line = None
         self.current_lines = []
-        self.work_mode = self.WorkingMode.add_mode
+        self.work_mode = WorkingMode.add_mode
         self.line_button.config(text="Добавить линию", command=self._open_add_line_form)
         self.operations_2d_button.grid_remove()
         self.operations_3d_button.grid_remove()
@@ -227,21 +212,21 @@ class Engine(object):
 
     # set projection mode methods
     def _set_xy_projection(self):
-        self.projection_mode = self.ProjectionMode.xy
+        self.projection_mode = ProjectionMode.xy
         self.xy_button.config(relief=SUNKEN)
         self.zy_button.config(relief=RAISED)
         self.xz_button.config(relief=RAISED)
         self.redraw_scene()
 
     def _set_zy_projection(self):
-        self.projection_mode = self.ProjectionMode.zy
+        self.projection_mode = ProjectionMode.zy
         self.xy_button.config(relief=RAISED)
         self.zy_button.config(relief=SUNKEN)
         self.xz_button.config(relief=RAISED)
         self.redraw_scene()
 
     def _set_xz_projection(self):
-        self.projection_mode = self.ProjectionMode.xz
+        self.projection_mode = ProjectionMode.xz
         self.xy_button.config(relief=RAISED)
         self.zy_button.config(relief=RAISED)
         self.xz_button.config(relief=SUNKEN)
@@ -254,39 +239,39 @@ class Engine(object):
 
     # fill status bar label
     def _fill_status_bar(self, x, y):
-        if self.work_mode == self.WorkingMode.add_mode:
-            if self.projection_mode == self.ProjectionMode.xy:
+        if self.work_mode == WorkingMode.add_mode:
+            if self.projection_mode == ProjectionMode.xy:
                 self.status_bar.config(
                     text="x:{}, y:{}, current line: {}, color: {}, width: {}".format(
                         x, y, self.current_line, self.line_color, self.line_width
                     ))
-            if self.projection_mode == self.ProjectionMode.xz:
+            if self.projection_mode == ProjectionMode.xz:
                 self.status_bar.config(
                     text="x:{}, z:{}, current line: {}, color: {}, width: {}".format(
                         x, y, self.current_line, self.line_color, self.line_width
                     ))
-            if self.projection_mode == self.ProjectionMode.zy:
+            if self.projection_mode == ProjectionMode.zy:
                 self.status_bar.config(
                     text="z:{}, y:{}, current line: {}, color: {}, width: {}".format(
                         x, y, self.current_line, self.line_color, self.line_width
                     ))
 
-        if self.work_mode == self.WorkingMode.edit_mode:
-            if self.projection_mode == self.ProjectionMode.xy:
+        if self.work_mode == WorkingMode.edit_mode:
+            if self.projection_mode == ProjectionMode.xy:
                 self.status_bar.config(
                     text="x:{}, y:{}, current line: {}, color: {}, width: {}".format(
                         x, y, self.current_line,
                         self.current_line.color if self.current_line is not None else None,
                         self.current_line.width if self.current_line is not None else None
                     ))
-            if self.projection_mode == self.ProjectionMode.xz:
+            if self.projection_mode == ProjectionMode.xz:
                 self.status_bar.config(
                     text="x:{}, z:{}, current line: {}, color: {}, width: {}".format(
                         x, y, self.current_line,
                         self.current_line.color if self.current_line is not None else None,
                         self.current_line.width if self.current_line is not None else None
                     ))
-            if self.projection_mode == self.ProjectionMode.zy:
+            if self.projection_mode == ProjectionMode.zy:
                 self.status_bar.config(
                     text="z:{}, y:{}, current line: {}, color: {}, width: {}".format(
                         x, y, self.current_line,
@@ -300,9 +285,9 @@ class Engine(object):
                                                      self.current_zero_coord[1] + event.y)
         self.redraw_scene()
         match self.work_mode:
-            case self.WorkingMode.add_mode:
+            case WorkingMode.add_mode:
                 self._add_line()
-            case self.WorkingMode.edit_mode:
+            case WorkingMode.edit_mode:
                 self._transit_line()
         self.prev_mouse = self.current_mouse.copy()
         self._fill_status_bar(self.current_mouse[0], self.current_mouse[1])
@@ -313,16 +298,16 @@ class Engine(object):
         self.current_mouse = None
         self.line_points = [None, None]
         self.transit_line_deltas = None
-        self.transit = self.TransitMode.nothing
+        self.transit = TransitMode.nothing
         match self.work_mode:
-            case self.WorkingMode.add_mode:
+            case WorkingMode.add_mode:
                 self.lines.append(self.current_line)
-            case self.WorkingMode.edit_mode:
-                self.transit = self.TransitMode.nothing
+            case WorkingMode.edit_mode:
+                self.transit = TransitMode.nothing
 
     # left button click (choose line)
     def _canvas_b1_click(self, event):
-        if self.work_mode == self.WorkingMode.edit_mode:
+        if self.work_mode == WorkingMode.edit_mode:
             mouse = self._check_mouse_coord(self.current_zero_coord[0] + event.x, self.current_zero_coord[1] + event.y)
             flag = False
             for i in range(len(self.lines)):
@@ -338,7 +323,7 @@ class Engine(object):
             self.redraw_scene()
 
     def _canvas_control_b1_clicked(self, event):
-        if self.work_mode == self.WorkingMode.edit_mode:
+        if self.work_mode == WorkingMode.edit_mode:
             mouse = self._check_mouse_coord(self.current_zero_coord[0] + event.x, self.current_zero_coord[1] + event.y)
             flag = False
             for i in range(len(self.lines)):
@@ -356,6 +341,7 @@ class Engine(object):
 
     def _canvas_control_b1_motion(self, event):
         pass
+
     ##########calculate methods##################
     # check mouse pos
     def _check_mouse_coord(self, x, y):
@@ -371,9 +357,9 @@ class Engine(object):
 
     # convert canvas mouse coord to point coord with projection
     def _get_mouse_projection_point(self):
-        if self.projection_mode == self.ProjectionMode.xy:
+        if self.projection_mode == ProjectionMode.xy:
             return Point(self.current_mouse[0], self.current_mouse[1], 0)
-        elif self.projection_mode == self.ProjectionMode.xz:
+        elif self.projection_mode == ProjectionMode.xz:
             return Point(self.current_mouse[0], 0, self.current_mouse[1])
         else:
             return Point(0, self.current_mouse[1], self.current_mouse[0])
@@ -381,9 +367,9 @@ class Engine(object):
     # convert point coord to canvas coord
     def _get_canvas_coord_from_projection_point(self, point):
         if isinstance(point, Point):
-            if self.projection_mode == self.ProjectionMode.xy:
+            if self.projection_mode == ProjectionMode.xy:
                 return [point.x, point.y]
-            elif self.projection_mode == self.ProjectionMode.xz:
+            elif self.projection_mode == ProjectionMode.xz:
                 return [point.x, point.z]
             else:
                 return [point.z, point.y]
@@ -433,7 +419,7 @@ class Engine(object):
                 canvas_y2,
                 width=line.width,
                 fill="red" if (self.current_line == line or line in self.current_lines)
-                              and self.work_mode != self.WorkingMode.add_mode else line.color,
+                              and self.work_mode != WorkingMode.add_mode else line.color,
                 smooth=True
             )
             # drawing line text
@@ -476,14 +462,14 @@ class Engine(object):
     def _transit_line(self):
         eps = 10
         if self.prev_mouse is not None:
-            if self.transit == self.TransitMode.nothing:
+            if self.transit == TransitMode.nothing:
                 for i in range(len(self.lines)):
                     if isinstance(self.lines[i], Line):
                         # match with p1
                         point_to_canvas = self._get_canvas_coord_from_projection_point(self.lines[i].p1)
                         if math.fabs(point_to_canvas[0] - self.prev_mouse[0]) <= eps \
                                 and math.fabs(point_to_canvas[1] - self.prev_mouse[1]) <= eps:
-                            self.transit = self.TransitMode.point1
+                            self.transit = TransitMode.point1
                             self.current_line = self.lines[i]
                             break
 
@@ -491,7 +477,7 @@ class Engine(object):
                         point_to_canvas = self._get_canvas_coord_from_projection_point(self.lines[i].p2)
                         if math.fabs(point_to_canvas[0] - self.prev_mouse[0]) <= eps \
                                 and math.fabs(point_to_canvas[1] - self.prev_mouse[1]) <= eps:
-                            self.transit = self.TransitMode.point2
+                            self.transit = TransitMode.point2
                             self.current_line = self.lines[i]
                             break
 
@@ -508,47 +494,47 @@ class Engine(object):
                                 self.prev_mouse[1] - p2[1]
                             ]
                             self.current_line = self.lines[i]
-                            self.transit = self.TransitMode.parallel
+                            self.transit = TransitMode.parallel
                             break
 
             # check flags
-            if self.transit == self.TransitMode.point1:
-                if self.projection_mode == self.ProjectionMode.xy:
+            if self.transit == TransitMode.point1:
+                if self.projection_mode == ProjectionMode.xy:
                     self.current_line.p1.x = self.current_mouse[0]
                     self.current_line.p1.y = self.current_mouse[1]
-                elif self.projection_mode == self.ProjectionMode.xz:
+                elif self.projection_mode == ProjectionMode.xz:
                     self.current_line.p1.x = self.current_mouse[0]
                     self.current_line.p1.z = self.current_mouse[1]
                 else:
                     self.current_line.p1.z = self.current_mouse[0]
                     self.current_line.p1.y = self.current_mouse[1]
-            if self.transit == self.TransitMode.point2:
-                if self.projection_mode == self.ProjectionMode.xy:
+            if self.transit == TransitMode.point2:
+                if self.projection_mode == ProjectionMode.xy:
                     self.current_line.p2.x = self.current_mouse[0]
                     self.current_line.p2.y = self.current_mouse[1]
-                elif self.projection_mode == self.ProjectionMode.xz:
+                elif self.projection_mode == ProjectionMode.xz:
                     self.current_line.p2.x = self.current_mouse[0]
                     self.current_line.p2.z = self.current_mouse[1]
                 else:
                     self.current_line.p2.z = self.current_mouse[0]
                     self.current_line.p2.y = self.current_mouse[1]
-            if self.transit == self.TransitMode.parallel:
+            if self.transit == TransitMode.parallel:
                 # check on bounds p1, p2
                 p1 = self._get_canvas_coord_from_projection_point(self.current_line.p1)
                 p2 = self._get_canvas_coord_from_projection_point(self.current_line.p2)
                 is_not_bound = self._check_point_coord(p1[0], p1[1]) and self._check_point_coord(p2[0], p2[1])
                 if is_not_bound:
-                    if self.projection_mode == self.ProjectionMode.xy:
+                    if self.projection_mode == ProjectionMode.xy:
                         self.current_line.p1.x = self.current_mouse[0] + self.transit_line_deltas[0]
                         self.current_line.p2.x = self.current_mouse[0] - self.transit_line_deltas[2]
                         self.current_line.p1.y = self.current_mouse[1] + self.transit_line_deltas[1]
                         self.current_line.p2.y = self.current_mouse[1] - self.transit_line_deltas[3]
-                    if self.projection_mode == self.ProjectionMode.xz:
+                    if self.projection_mode == ProjectionMode.xz:
                         self.current_line.p1.x = self.current_mouse[0] + self.transit_line_deltas[0]
                         self.current_line.p2.x = self.current_mouse[0] - self.transit_line_deltas[2]
                         self.current_line.p1.z = self.current_mouse[1] + self.transit_line_deltas[1]
                         self.current_line.p2.z = self.current_mouse[1] - self.transit_line_deltas[3]
-                    if self.projection_mode == self.ProjectionMode.zy:
+                    if self.projection_mode == ProjectionMode.zy:
                         self.current_line.p1.z = self.current_mouse[0] + self.transit_line_deltas[0]
                         self.current_line.p2.z = self.current_mouse[0] - self.transit_line_deltas[2]
                         self.current_line.p1.y = self.current_mouse[1] + self.transit_line_deltas[1]
