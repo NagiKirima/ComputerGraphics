@@ -42,7 +42,7 @@ class EditLineForm(Toplevel):
         if self.mainapp.current_line is not None:
             self._add_objects_in_list(self.mainapp.current_line)
             self._grid_canvas_objects(self.field_object_list[0], 0, self.mainapp.current_line)
-        elif self.mainapp.current_lines is not None:
+        elif len(self.mainapp.current_lines) != 0:
             for i in range(len(self.mainapp.current_lines)):
                 self._add_objects_in_list(self.mainapp.current_lines[i])
             row = 0
@@ -63,10 +63,11 @@ class EditLineForm(Toplevel):
             lines = []
             if self.mainapp.current_line is not None:
                 lines.append(self._get_line_from_entries(self.field_object_list[0], self.mainapp.current_line))
-                for i in self.mainapp.lines:
-                    if i == self.mainapp.current_line:
-                        i = lines[0]
+                for i in range(len(self.mainapp.lines)):
+                    if self.mainapp.lines[i] == self.mainapp.current_line:
+                        self.mainapp.lines[i] = lines[0]
                         self.mainapp.current_line = lines[0]
+
             elif len(self.mainapp.current_lines) != 0:
                 for i in range(len(self.field_object_list)):
                     lines.append(self._get_line_from_entries(self.field_object_list[i], self.mainapp.current_lines[i]))
@@ -76,6 +77,7 @@ class EditLineForm(Toplevel):
                         if self.mainapp.lines[j] == self.mainapp.current_lines[i]:
                             self.mainapp.current_lines[i] = lines[i]
                             self.mainapp.lines[j] = lines[i]
+
             self.mainapp.redraw_scene()
             self.destroy()
         except:

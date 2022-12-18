@@ -56,7 +56,11 @@ class FormFor2dOperation(Toplevel):
         elif len(self.mainapp.current_lines) != 0:
             Calculate.transit_2d(
                 self.mainapp.current_lines, self.projection_mode,
-                int(self.transfer_m_entry.get()), int(self.transfer_n_entry.get())
+                int(self.transfer_m_entry.get()), int(self.transfer_n_entry.get()),  # m,n
+                int(self.scale_a_entry.get()), int(self.scale_b_entry.get()),  # a,b
+                int(self.rotate_angle_scale.get()),  # alpha
+                self.mirror_radio_button_abc.getboolean(True), self.mirror_radio_button_ord.getboolean(True),  # z1,z2
+                int(self.projection_p_entry.get()), int(self.projection_q_entry.get())  # p,q
             )
         self.mainapp.redraw_scene()
         self._on_closing()
@@ -68,13 +72,15 @@ class FormFor2dOperation(Toplevel):
         self.zy_button.grid(row=0, column=2, columnspan=2, padx=5, pady=5, sticky=NSEW)
         self.xz_button.grid(row=0, column=4, columnspan=2, padx=5, pady=5, sticky=NSEW)
         # transfer
-        Label(self, text="Перемещение", font=LABEL_FONT).grid(row=1, column=0, columnspan=6, padx=5, pady=5, sticky=NSEW)
+        Label(self, text="Перемещение", font=LABEL_FONT).grid(row=1, column=0, columnspan=6, padx=5, pady=5,
+                                                              sticky=NSEW)
         Label(self, text="m", font=LABEL_FONT).grid(row=2, column=0, padx=5, pady=5, sticky=NSEW)
         Label(self, text="n", font=LABEL_FONT).grid(row=2, column=3, padx=5, pady=5, sticky=NSEW)
         self.transfer_m_entry.grid(row=2, column=1, columnspan=2, padx=5, pady=5, sticky=NSEW)
         self.transfer_n_entry.grid(row=2, column=4, columnspan=2, padx=5, pady=5, sticky=NSEW)
         # scale
-        Label(self, text="Масштабирование", font=LABEL_FONT).grid(row=3, column=0, columnspan=6, padx=5, pady=5, sticky=NSEW)
+        Label(self, text="Масштабирование", font=LABEL_FONT).grid(row=3, column=0, columnspan=6, padx=5, pady=5,
+                                                                  sticky=NSEW)
         Label(self, text="a", font=LABEL_FONT).grid(row=4, column=0, padx=5, pady=5, sticky=NSEW)
         Label(self, text="b", font=LABEL_FONT).grid(row=4, column=3, padx=5, pady=5, sticky=NSEW)
         self.scale_a_entry.grid(row=4, column=1, columnspan=2, padx=5, pady=5, sticky=NSEW)
@@ -84,11 +90,13 @@ class FormFor2dOperation(Toplevel):
         Label(self, text="Угол", font=LABEL_FONT).grid(row=6, column=0, padx=5, pady=5)
         self.rotate_angle_scale.grid(row=6, column=1, columnspan=5, padx=5, pady=5, sticky=NSEW)
         # mirror
-        Label(self, text="Зеркалирование", font=LABEL_FONT).grid(row=7, column=0, columnspan=6, padx=5, pady=5, sticky=NSEW)
+        Label(self, text="Зеркалирование", font=LABEL_FONT).grid(row=7, column=0, columnspan=6, padx=5, pady=5,
+                                                                 sticky=NSEW)
         self.mirror_radio_button_abc.grid(row=8, column=0, columnspan=3, padx=5, pady=5, sticky=NSEW)
         self.mirror_radio_button_ord.grid(row=8, column=3, columnspan=3, padx=5, pady=5, sticky=NSEW)
         # project
-        Label(self, text="Проецирование", font=LABEL_FONT).grid(row=9, column=0, columnspan=6, padx=5, pady=5, sticky=NSEW)
+        Label(self, text="Проецирование", font=LABEL_FONT).grid(row=9, column=0, columnspan=6, padx=5, pady=5,
+                                                                sticky=NSEW)
         Label(self, text="p", font=LABEL_FONT).grid(row=10, column=0, padx=5, pady=5, sticky=NSEW)
         Label(self, text="q", font=LABEL_FONT).grid(row=10, column=3, padx=5, pady=5, sticky=NSEW)
         self.projection_p_entry.grid(row=10, column=1, columnspan=2, padx=5, pady=5, sticky=NSEW)
