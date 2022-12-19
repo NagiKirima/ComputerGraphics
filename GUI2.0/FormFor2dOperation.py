@@ -3,6 +3,7 @@ from Settings import BUTTON_FONT, LABEL_FONT, LEN
 import re
 from Enums import *
 from CalculateOperation import Calculate
+from tkinter import messagebox
 
 
 class FormFor2dOperation(Toplevel):
@@ -13,7 +14,6 @@ class FormFor2dOperation(Toplevel):
         self.geometry("600x400")
         self.resizable(False, False)
         self.mainapp = mainapp
-        self.check = (self.register(self._is_valid), "%P")
         self.projection_mode = ProjectionMode.xy
 
         # projection mode buttons
@@ -25,23 +25,29 @@ class FormFor2dOperation(Toplevel):
                                 command=self._set_projection_xz)
 
         # transfer operation widgets
-        self.transfer_m_entry = Entry(self, validate="key", validatecommand=self.check, font=LABEL_FONT)
-        self.transfer_n_entry = Entry(self, validate="key", validatecommand=self.check, font=LABEL_FONT)
+        self.transfer_m_entry = Entry(self, font=LABEL_FONT)
+        self.transfer_n_entry = Entry(self, font=LABEL_FONT)
 
         # scale operation widgets
-        self.scale_a_entry = Entry(self, validate="key", validatecommand=self.check, font=LABEL_FONT)
-        self.scale_b_entry = Entry(self, validate="key", validatecommand=self.check, font=LABEL_FONT)
+        self.scale_a_entry = Entry(self, font=LABEL_FONT)
+        self.scale_b_entry = Entry(self, font=LABEL_FONT)
 
         # rotate operation widgets
         self.rotate_angle_scale = Scale(self, orient=HORIZONTAL, from_=-360, to=360, resolution=1, font=LABEL_FONT)
 
         # mirroring operation widgets
-        self.mirror_radio_button_ord = Radiobutton(self, text='по ординате', value=1, font=LABEL_FONT)
-        self.mirror_radio_button_abc = Radiobutton(self, text='по абсциссе', value=1, font=LABEL_FONT)
+        self.abc_var = IntVar()
+        self.abc_var.set(1)
+        self.ord_var = IntVar()
+        self.ord_var.set(1)
+        self.mirror_check_button_abc = Checkbutton(self, text='по абсциссе', variable=self.abc_var, font=LABEL_FONT,
+                                                   onvalue=-1, offvalue=1)
+        self.mirror_check_button_ord = Checkbutton(self, text='по ординате', variable=self.ord_var, font=LABEL_FONT,
+                                                   onvalue=-1, offvalue=1)
 
         # projection operation widgets
-        self.projection_p_entry = Entry(self, validate="key", validatecommand=self.check, font=LABEL_FONT)
-        self.projection_q_entry = Entry(self, validate="key", validatecommand=self.check, font=LABEL_FONT)
+        self.projection_p_entry = Entry(self, font=LABEL_FONT)
+        self.projection_q_entry = Entry(self, font=LABEL_FONT)
 
         # confirm changes button
         self.send_button = Button(self, text="Применить", font=BUTTON_FONT, command=self._confirm)
@@ -50,17 +56,29 @@ class FormFor2dOperation(Toplevel):
         self._grid()
         self._set_defaults()
 
+    def _check_entries(self):
+        try:
+            n = int(self.transfer_n_entry.get())
+            m = int(self.transfer_m_entry.get())
+            a = float(self.scale_a_entry.get())
+            b = float(self.scale_b_entry.get())
+            p = float(self.projection_p_entry.get())
+            q = float(self.projection_q_entry.get())
+        except:
+            messagebox.showerror("Ошибка", f"Введите корректные значения в поля")
+
     def _confirm(self):
+        self._check_entries()
         if self.mainapp.current_line is not None:
             pass
         elif len(self.mainapp.current_lines) != 0:
-            Calculate.transit_2d(
+            Calculate.calculate_2d(
                 self.mainapp.current_lines, self.projection_mode,
                 int(self.transfer_m_entry.get()), int(self.transfer_n_entry.get()),  # m,n
-                int(self.scale_a_entry.get()), int(self.scale_b_entry.get()),  # a,b
+                float(self.scale_a_entry.get()), float(self.scale_b_entry.get()),  # a,b
                 int(self.rotate_angle_scale.get()),  # alpha
-                self.mirror_radio_button_abc.getboolean(True), self.mirror_radio_button_ord.getboolean(True),  # z1,z2
-                int(self.projection_p_entry.get()), int(self.projection_q_entry.get())  # p,q
+                self.abc_var.get(), self.ord_var.get(),  # z1,z2
+                float(self.projection_p_entry.get()), int(self.projection_q_entry.get())  # p,q
             )
         self.mainapp.redraw_scene()
         self._on_closing()
@@ -92,8 +110,8 @@ class FormFor2dOperation(Toplevel):
         # mirror
         Label(self, text="Зеркалирование", font=LABEL_FONT).grid(row=7, column=0, columnspan=6, padx=5, pady=5,
                                                                  sticky=NSEW)
-        self.mirror_radio_button_abc.grid(row=8, column=0, columnspan=3, padx=5, pady=5, sticky=NSEW)
-        self.mirror_radio_button_ord.grid(row=8, column=3, columnspan=3, padx=5, pady=5, sticky=NSEW)
+        self.mirror_check_button_abc.grid(row=8, column=0, columnspan=3, padx=5, pady=5, sticky=NSEW)
+        self.mirror_check_button_ord.grid(row=8, column=3, columnspan=3, padx=5, pady=5, sticky=NSEW)
         # project
         Label(self, text="Проецирование", font=LABEL_FONT).grid(row=9, column=0, columnspan=6, padx=5, pady=5,
                                                                 sticky=NSEW)
@@ -114,8 +132,8 @@ class FormFor2dOperation(Toplevel):
         self.transfer_n_entry.insert(-1, str(0))
         self.scale_a_entry.insert(-1, str(1))
         self.scale_b_entry.insert(-1, str(1))
-        self.projection_p_entry.insert(-1, str(1))
-        self.projection_q_entry.insert(-1, str(1))
+        self.projection_p_entry.insert(-1, str(0))
+        self.projection_q_entry.insert(-1, str(0))
 
     def _set_projection_xy(self):
         self.projection_mode = ProjectionMode.xy
@@ -134,10 +152,6 @@ class FormFor2dOperation(Toplevel):
         self.xy_button.config(relief=RAISED)
         self.zy_button.config(relief=RAISED)
         self.xz_button.config(relief=SUNKEN)
-
-    @staticmethod
-    def _is_valid(value):
-        return True if re.match("^-$|^$|-?(0|[1-9]\d*)(?<!-0)$", value) is not None else False
 
     def _on_closing(self):
         self.grab_release()
