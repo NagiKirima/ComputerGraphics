@@ -70,7 +70,14 @@ class FormFor2dOperation(Toplevel):
     def _confirm(self):
         self._check_entries()
         if self.mainapp.current_line is not None:
-            pass
+            Calculate.calculate_2d(
+                [self.mainapp.current_line], self.projection_mode,
+                int(self.transfer_m_entry.get()), int(self.transfer_n_entry.get()),  # m,n
+                float(self.scale_a_entry.get()), float(self.scale_b_entry.get()),  # a,b
+                int(self.rotate_angle_scale.get()),  # alpha
+                self.abc_var.get(), self.ord_var.get(),  # z1,z2
+                float(self.projection_p_entry.get()), int(self.projection_q_entry.get())  # p,q
+            )
         elif len(self.mainapp.current_lines) != 0:
             Calculate.calculate_2d(
                 self.mainapp.current_lines, self.projection_mode,

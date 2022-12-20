@@ -1,3 +1,37 @@
+from json import JSONEncoder, JSONDecoder
+
+
+class MyEncoder(JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Line) or isinstance(obj, Point):
+            return obj.__dict__()
+        else:
+            return JSONEncoder.default(self, obj)
+
+
+def decode_object(obj):
+    if 'p1' and 'p2' in obj:
+        p1_dict = obj['p1']
+        p2_dict = obj['p2']
+        return Line(
+            Point(
+                p1_dict['x'],
+                p1_dict['y'],
+                p1_dict['z'],
+                p1_dict['ok']
+            ),
+            Point(
+                p2_dict['x'],
+                p2_dict['y'],
+                p2_dict['z'],
+                p2_dict['ok']
+            ),
+            obj['color'],
+            obj['width']
+        )
+    return obj
+
+
 class Point:
     def __init__(self, x=None, y=None, z=None, ok=None):
         self.x = 0
@@ -12,6 +46,14 @@ class Point:
             self.z = z
         if ok is not None:
             self.ok = ok
+
+    def __dict__(self):
+        return {
+            "x": self.x,
+            "y": self.y,
+            "z": self.z,
+            "ok": self.ok
+        }
 
     def __str__(self):
         return "x: {}, y: {}, z: {}, ok: {}".format(
@@ -46,5 +88,14 @@ class Line:
     def get_directive_vector(self):
         return f"({self.p2.x - self.p1.x}, {self.p2.y - self.p1.y}, {self.p2.z - self.p1.z})"
 
+    def __dict__(self):
+        return {
+            "p1": self.p1.__dict__(),
+            "p2": self.p2.__dict__(),
+            "color": self.color,
+            "width": self.width
+        }
+
     def __str__(self):
         return self.get_directive_vector()
+

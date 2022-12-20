@@ -1,3 +1,6 @@
+import tkinter.filedialog
+import tkinter.messagebox
+import json
 from tkinter import *
 from AddLineForm import *
 from EditLineForm import *
@@ -10,7 +13,6 @@ from FormFor2dOperation import FormFor2dOperation
 
 
 class Engine(object):
-    ########initialization#########
     def __init__(self):
         self.line_color = "#000000"
         self.line_width = 1
@@ -55,8 +57,10 @@ class Engine(object):
                                 command=self._set_zy_projection)
         self.xz_button = Button(self.root, text="XZ", font=BUTTON_FONT,
                                 command=self._set_xz_projection)
-        self.save_button = Button(self.root, text="Сохранить проект", font=BUTTON_FONT)
-        self.load_button = Button(self.root, text="Загрузить проект", font=BUTTON_FONT)
+        self.save_button = Button(self.root, text="Сохранить проект", font=BUTTON_FONT,
+                                  command=self._save_file)
+        self.load_button = Button(self.root, text="Загрузить проект", font=BUTTON_FONT,
+                                  command=self._load_file)
         self.operations_2d_button = Button(self.root, text="2D операции", font=BUTTON_FONT,
                                            command=self._open_2d_opeation_form)
         self.operations_3d_button = Button(self.root, text="3D операции", font=BUTTON_FONT)
@@ -103,7 +107,7 @@ class Engine(object):
             self.root.columnconfigure(i, minsize=50)
         self.root.columnconfigure(0, weight=1)
 
-    ###########handlers##############
+    # handlers
     # delete current line or group of lines
     def _backspace_clicked(self, event):
         if self.current_line is not None:
@@ -342,7 +346,7 @@ class Engine(object):
     def _canvas_control_b1_motion(self, event):
         pass
 
-    ##########calculate methods##################
+    # calculate methods
     # check mouse pos
     def _check_mouse_coord(self, x, y):
         if x < -MAXX:
@@ -546,13 +550,49 @@ class Engine(object):
             return False
         return True
 
-    ##############render methods##############
+    # render methods
     # redraw scene
     def redraw_scene(self):
         self.canvas.delete("all")
         # draw lines primitive
         for i in range(len(self.lines)):
             self._draw_line(self.lines[i])
+
+    # save/load methods
+    def _save_file(self):
+        file_path = tkinter.filedialog.asksaveasfilename(
+            filetypes=[('JSON File', '*.json')],
+        )
+        if file_path != "":
+            try:
+                with open(file_path, "w", encoding="utf-8") as file:
+                    json.dump(self.lines, file, cls=MyEncoder)
+                tkinter.messagebox.showinfo("Сохранение", "Файл успешно сохранен!")
+            except:
+                tkinter.messagebox.showerror("Ошибка сохранения", "Ошибка при записи в файл!")
+        else:
+            tkinter.messagebox.showinfo("Сохранение", "Файл не был сохранен!")
+
+    def _load_file(self):
+        file_path = tkinter.filedialog.askopenfilename(
+            filetypes=[('JSON File', '*.json')],
+        )
+        if file_path != "":
+            try:
+                with open(file_path, "r", encoding="utf-8") as file:
+                    self.lines = json.load(file, object_hook=decode_object)
+                self.current_line = None
+                self.current_lines = []
+                self.line_width = 1
+                self.width_slider.set(1)
+                self.line_color = "black"
+                self.color_button.config(fg="black")
+                self.redraw_scene()
+                tkinter.messagebox.showinfo("Загрузка", "Файл успешно открыт!")
+            except:
+                tkinter.messagebox.showerror("Ошибка загрузки", "Ошибка при чтении файла!")
+        else:
+            tkinter.messagebox.showinfo("Загрузка", "Файл не выбран!")
 
     # mainloop
     def start(self):
