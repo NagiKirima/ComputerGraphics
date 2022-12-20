@@ -10,6 +10,7 @@ from Primitives import *
 import math
 from Enums import *
 from FormFor2dOperation import FormFor2dOperation
+from TrimetricForm import TrimetricForm
 
 
 class Engine(object):
@@ -64,7 +65,8 @@ class Engine(object):
         self.operations_2d_button = Button(self.root, text="2D операции", font=BUTTON_FONT,
                                            command=self._open_2d_opeation_form)
         self.operations_3d_button = Button(self.root, text="3D операции", font=BUTTON_FONT)
-        self.trimetric_matrix_button = Button(self.root, text="Осмотр", font=BUTTON_FONT)
+        self.trimetric_matrix_button = Button(self.root, text="Осмотр", font=BUTTON_FONT,
+                                              command=self._open_trimetric_form)
 
         # init slider
         self.width_slider = WIDTH_SCALE
@@ -118,6 +120,14 @@ class Engine(object):
                 self.lines.remove(i)
             self.current_lines = []
         self.redraw_scene()
+
+    # open trimetric form
+    def _open_trimetric_form(self):
+        if len(self.lines) != 0:
+            form = TrimetricForm(self)
+            form.grab_set()
+        else:
+            tkinter.messagebox.showerror("Ошибка", "Нет ни одной прямой")
 
     # open dialog window with 2d operations
     def _open_2d_opeation_form(self):
