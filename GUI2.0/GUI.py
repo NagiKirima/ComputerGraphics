@@ -30,6 +30,7 @@ class Engine(object):
         self.transit_line_deltas = None
         self.current_mouse = None
         self.prev_mouse = None
+        self.rect_start_pos = None
         self.line_points = [None, None]
         self.lines = []
         self.current_line = None
@@ -87,6 +88,7 @@ class Engine(object):
         self.root.bind("<BackSpace>", self._backspace_clicked)
         self.canvas.bind("<Control-1>", self._canvas_control_b1_clicked)
         self.canvas.bind("<Control-B1-Motion>", self._canvas_control_b1_motion)
+        self.canvas.bind("<Control-ButtonRelease-1>", self._canvas_control_b1_motion_release)
 
         # grid window objects
         self.canvas.grid(row=0, column=0, columnspan=7, rowspan=9, padx=5, pady=5, sticky=NSEW)
@@ -102,6 +104,7 @@ class Engine(object):
         self.save_button.grid(row=7, column=7, padx=5, pady=5, columnspan=3, sticky=NSEW)
         self.load_button.grid(row=7, column=10, padx=5, pady=5, columnspan=3, sticky=NSEW)
         self.status_bar.grid(row=9, column=0, columnspan=7, padx=5, pady=5, sticky=NSEW)
+        self.trimetric_matrix_button.grid(row=6, column=7, padx=5, pady=5, columnspan=6, sticky=NSEW)
 
         # grid configure
         self.root.rowconfigure(8, weight=1)
@@ -206,7 +209,6 @@ class Engine(object):
         self.line_button.config(text="Изменить линию", command=self._open_edit_line_form)
         self.operations_2d_button.grid(row=5, column=7, padx=5, pady=5, columnspan=3, sticky=NSEW)
         self.operations_3d_button.grid(row=5, column=10, padx=5, pady=5, columnspan=3, sticky=NSEW)
-        self.trimetric_matrix_button.grid(row=6, column=7, padx=5, pady=5, columnspan=6, sticky=NSEW)
         self.redraw_scene()
 
     # set add mode
@@ -221,7 +223,6 @@ class Engine(object):
         self.line_button.config(text="Добавить линию", command=self._open_add_line_form)
         self.operations_2d_button.grid_remove()
         self.operations_3d_button.grid_remove()
-        self.trimetric_matrix_button.grid_remove()
         self.redraw_scene()
 
     # set projection mode methods
@@ -353,10 +354,46 @@ class Engine(object):
             self._fill_status_bar(mouse[0], mouse[1])
             self.redraw_scene()
 
+    def _canvas_control_b1_motion_release(self, event):
+        self.prev_mouse = None
+        self.current_mouse = None
+        self.line_points = [None, None]
+        self.rect_start_pos = None
+
     def _canvas_control_b1_motion(self, event):
-        pass
+        self.current_mouse = self._check_mouse_coord(self.current_zero_coord[0] + event.x,
+                                                     self.current_zero_coord[1] + event.y)
+        if self.rect_start_pos is None:
+            self.current_lines = []
+            self.rect_start_pos = self.current_mouse.copy()
+
+        self.redraw_scene()
+        if self.work_mode == WorkingMode.edit_mode:
+            self._draw_rect()
+            self._get_lines_in_rect()
+        self.prev_mouse = self.current_mouse.copy()
+        self._fill_status_bar(self.current_mouse[0], self.current_mouse[1])
 
     # calculate methods
+    def _get_lines_in_rect(self):
+        for i in self.lines:
+            p1 = self._get_canvas_coord_from_projection_point(i.p1)
+            p2 = self._get_canvas_coord_from_projection_point(i.p2)
+            if p1[0] >= min(self.rect_start_pos[0], self.current_mouse[0]) \
+                    and p1[0] <= max(self.rect_start_pos[0], self.current_mouse[0]) \
+                    and p1[1] >= min(self.rect_start_pos[1], self.current_mouse[1]) \
+                    and p1[1] <= max(self.rect_start_pos[1], self.current_mouse[1]) \
+                    and p2[0] >= min(self.rect_start_pos[0], self.current_mouse[0]) \
+                    and p2[0] <= max(self.rect_start_pos[0], self.current_mouse[0]) \
+                    and p2[1] >= min(self.rect_start_pos[1], self.current_mouse[1]) \
+                    and p2[1] <= max(self.rect_start_pos[1], self.current_mouse[1]):
+                if i not in self.current_lines:
+                    self.current_lines.append(i)
+            else:
+                if i in self.current_lines:
+                    self.current_lines.remove(i)
+
+
     # check mouse pos
     def _check_mouse_coord(self, x, y):
         if x < -MAXX:
@@ -446,6 +483,19 @@ class Engine(object):
                 opt2 = self._get_line_text_options(line.p2, anchor_p2)
                 self.canvas.create_text(canvas_p1_projection[0], canvas_p1_projection[1], opt1)
                 self.canvas.create_text(canvas_p2_projection[0], canvas_p2_projection[1], opt2)
+
+    # draw rect
+    def _draw_rect(self):
+        if self.current_mouse is not None and self.rect_start_pos is not None:
+            self.canvas.create_rectangle(
+                self.rect_start_pos[0],
+                self.rect_start_pos[1],
+                self.current_mouse[0],
+                self.current_mouse[1],
+                width=1,
+                dash=(5, 3),
+                outline="white"
+            )
 
     # sub methods for draw line
     def _get_line_text_options(self, point, anchor):

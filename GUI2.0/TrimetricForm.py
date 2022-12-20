@@ -37,8 +37,8 @@ class TrimetricForm(Toplevel):
 
         # objects
         self.field = Canvas(self, bg=CANVAS_BG_COLOR, scrollregion=(MINX, MINY, MAXX, MAXY))
-        self.scroll_x = Scrollbar(self.field, orient=HORIZONTAL, command=self.field.xview)
-        self.scroll_y = Scrollbar(self.field, orient=VERTICAL, command=self.field.yview)
+        self.scroll_x = Scrollbar(self.field, orient=HORIZONTAL, command=self.field.xview, cursor="fleur")
+        self.scroll_y = Scrollbar(self.field, orient=VERTICAL, command=self.field.yview, cursor="fleur")
         self.scroll_x.pack(side=BOTTOM, fill=X)
         self.scroll_y.pack(side=RIGHT, fill=Y)
         self.field.config(xscrollcommand=self.scroll_x.set, yscrollcommand=self.scroll_y.set)
