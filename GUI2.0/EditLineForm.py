@@ -24,19 +24,11 @@ class EditLineForm(Toplevel):
         self.send_button.grid(row=1, column=0, padx=5, pady=5, sticky=NSEW)
 
         self.field = Canvas(self, highlightthickness=0)
+        self.f = Frame(self.field)
         self.field.grid(row=0, column=0, padx=5, pady=5, sticky=NSEW)
+        self.field.create_window(0, 0, window=self.f, anchor="nw")
         for i in range(6):
-            self.field.columnconfigure(i, weight=1)
-
-        # scrollbar
-        self.scrollbar = Scrollbar(self, orient=VERTICAL)
-        self.scrollbar.grid(row=0, column=1, sticky=NS)
-        self.scrollbar.config(command=self.field.yview)
-        self.field.config(yscrollcommand=self.scrollbar.set)
-
-        # form grid configure
-        self.rowconfigure(0, weight=1)
-        self.columnconfigure(0, weight=1)
+            self.f.columnconfigure(i, weight=1)
 
         # grid canvas objects
         if self.mainapp.current_line is not None:
@@ -49,6 +41,16 @@ class EditLineForm(Toplevel):
             for i in range(len(self.mainapp.current_lines)):
                 self._grid_canvas_objects(self.field_object_list[i], row, self.mainapp.current_lines[i])
                 row += 3
+
+        # scrollbar
+        self.scrollbar = Scrollbar(self, orient=VERTICAL, command=self.field.yview)
+        self.scrollbar.grid(row=0, column=1, sticky=NS)
+        self.field.config(yscrollcommand=self.scrollbar.set)
+        self.field.bind("<Configure>", lambda e: self.field.configure(scrollregion=self.field.bbox("all")))
+
+        # form grid configure
+        self.rowconfigure(0, weight=1)
+        self.columnconfigure(0, weight=1)
 
     @staticmethod
     def _is_valid(value):
@@ -86,18 +88,18 @@ class EditLineForm(Toplevel):
     def _add_objects_in_list(self, line):
         self.field_object_list.append(
             [
-                Label(self.field, text="x1:", font=LABEL_FONT),
-                Entry(self.field, validate="key", validatecommand=self.check),
-                Label(self.field, text="y1:", font=LABEL_FONT),
-                Entry(self.field, validate="key", validatecommand=self.check),
-                Label(self.field, text="z1:", font=LABEL_FONT),
-                Entry(self.field, validate="key", validatecommand=self.check),
-                Label(self.field, text="x2:", font=LABEL_FONT),
-                Entry(self.field, validate="key", validatecommand=self.check),
-                Label(self.field, text="y2:", font=LABEL_FONT),
-                Entry(self.field, validate="key", validatecommand=self.check),
-                Label(self.field, text="z2:", font=LABEL_FONT),
-                Entry(self.field, validate="key", validatecommand=self.check),
+                Label(self.f, text="x1:", font=LABEL_FONT),
+                Entry(self.f, validate="key", validatecommand=self.check),
+                Label(self.f, text="y1:", font=LABEL_FONT),
+                Entry(self.f, validate="key", validatecommand=self.check),
+                Label(self.f, text="z1:", font=LABEL_FONT),
+                Entry(self.f, validate="key", validatecommand=self.check),
+                Label(self.f, text="x2:", font=LABEL_FONT),
+                Entry(self.f, validate="key", validatecommand=self.check),
+                Label(self.f, text="y2:", font=LABEL_FONT),
+                Entry(self.f, validate="key", validatecommand=self.check),
+                Label(self.f, text="z2:", font=LABEL_FONT),
+                Entry(self.f, validate="key", validatecommand=self.check),
             ]
         )
         # p1
@@ -114,8 +116,8 @@ class EditLineForm(Toplevel):
             row = start_row + 1
             if j > 5:
                 row = start_row + 2
-            objects[j].grid(row=row, column=j % 6)
-            Label(self.field, text=f"line: {line}",
+            objects[j].grid(row=row, column=j % 6, padx=5, pady=5, sticky=NSEW)
+            Label(self.f, text=f"line: {line}",
                   font=LABEL_FONT).grid(row=start_row, column=0, columnspan=6, sticky=NSEW)
 
     def _get_line_from_entries(self, objects, line):
