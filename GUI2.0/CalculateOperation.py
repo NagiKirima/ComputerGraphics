@@ -111,6 +111,7 @@ class Calculate:
             matrix.append([i.x, i.y, i.z, i.ok])
         matrix = np.array(matrix)
         res = matrix.dot(trimetric_matrix)
+
         Calculate._normalization(res)
         for i in range(len(points)):
             points[i].x = round(res[i][0])

@@ -10,6 +10,7 @@ from Primitives import *
 import math
 from Enums import *
 from FormFor2dOperation import FormFor2dOperation
+from FormFor3dOperation import FormFor3dOperation
 from TrimetricForm import TrimetricForm
 
 
@@ -65,7 +66,8 @@ class Engine(object):
                                   command=self._load_file)
         self.operations_2d_button = Button(self.root, text="2D операции", font=BUTTON_FONT,
                                            command=self._open_2d_opeation_form)
-        self.operations_3d_button = Button(self.root, text="3D операции", font=BUTTON_FONT)
+        self.operations_3d_button = Button(self.root, text="3D операции", font=BUTTON_FONT,
+                                           command=self._open_3d_form)
         self.trimetric_matrix_button = Button(self.root, text="Осмотр", font=BUTTON_FONT,
                                               command=self._open_trimetric_form)
 
@@ -130,7 +132,15 @@ class Engine(object):
             form = TrimetricForm(self)
             form.grab_set()
         else:
-            tkinter.messagebox.showerror("Ошибка", "Нет ни одной прямой")
+            tkinter.messagebox.showerror("Ошибка", "Нет прямых!")
+
+    # open dialog window with 3d operations
+    def _open_3d_form(self):
+        if self.current_line is None and len(self.current_lines) == 0:
+            tkinter.messagebox.showerror("Ошибка", "Выберите прямые для изменения")
+            return
+        form = FormFor3dOperation(self)
+        form.grab_set()
 
     # open dialog window with 2d operations
     def _open_2d_opeation_form(self):
